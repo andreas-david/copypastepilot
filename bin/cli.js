@@ -35,7 +35,7 @@ if (args.includes('--version') || args.includes('-v')) {
 }
 
 const { createServer } = await import('../server/http.js');
-const { createUpdateChecker } = await import('../server/update.js');
+const { createUpdateChecker, INSTALL_SPEC } = await import('../server/update.js');
 const { agentState, binaryPath } = await import('../server/agent.js');
 const { homeDir, migrateLegacyHome } = await import('../server/configs.js');
 const migrated = !process.env.EASYCOPY_HOME && migrateLegacyHome();
@@ -48,7 +48,7 @@ if (!Number.isInteger(wanted) || wanted < 1024 || wanted > 65535) {
 }
 
 const token = process.env.EASYCOPY_TOKEN || crypto.randomBytes(16).toString('base64url');
-const updates = createUpdateChecker({ name: pkg.name, version: pkg.version });
+const updates = createUpdateChecker({ version: pkg.version });
 
 async function listen(port) {
   for (let p = port; p < port + 20; p++) {
@@ -69,7 +69,7 @@ console.log(`${pkg.name} ${pkg.version} läuft.\n\n  ${url}\n\nKonfigurationen l
 
 const state = await agentState();
 if (state === 'missing') {
-  console.warn(`\nHinweis: agent-desktop ließ sich nicht starten (${binaryPath()}). Bitte neu installieren: npm install -g ${pkg.name}`);
+  console.warn(`\nHinweis: agent-desktop ließ sich nicht starten (${binaryPath()}). Bitte neu installieren: npm install -g ${INSTALL_SPEC}`);
 } else if (state === 'no_screen_recording') {
   console.warn(`\nHinweis: Es fehlt die Freigabe "Bildschirmaufnahme" (macOS: Systemeinstellungen → Datenschutz & Sicherheit).\nOhne sie sind Fenstertitel nicht lesbar, und Fenster lassen sich nicht erkennen. Es wird nichts aufgenommen.\nHilfe dabei: ${binaryPath()} permissions --guide\nDanach das Programm, aus dem du gestartet hast, neu starten.`);
 } else if (state === 'no_permission') {

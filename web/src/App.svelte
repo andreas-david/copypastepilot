@@ -93,7 +93,7 @@
       <div class="banner warn" role="alert">
         <div>
           <strong>agent-desktop wurde nicht gefunden.</strong> Ohne dieses Programm lassen sich keine Fenster lesen.
-          Installiere das Paket neu mit <code>npm install -g {status.name}</code>.
+          Installiere das Paket neu mit <code>npm install -g {status.install}</code>.
         </div>
       </div>
     {:else if status?.agent === 'no_screen_recording'}

@@ -1,6 +1,9 @@
-// Hinweis auf neue Versionen. Fragt die npm-Registry nach der neuesten veröffentlichten Version
+// Hinweis auf neue Versionen. Liest die package.json im GitHub-Repository (Branch main) und vergleicht die Version
 // (es werden weder Nutzerdaten noch Konfigurationen gesendet). Abschaltbar: EASYCOPY_NO_UPDATE_CHECK=1.
 const DAY = 24 * 60 * 60 * 1000;
+export const REPO = 'andreas-david/easycopy';
+export const INSTALL_SPEC = `github:${REPO}`; // so wird installiert und aktualisiert
+const VERSION_URL = `https://raw.githubusercontent.com/${REPO}/main/package.json`;
 
 /** Vergleicht x.y.z numerisch; Vorabversionen (-beta) gelten als kleiner als die fertige Version. */
 export function isNewer(latest, current) {
@@ -16,17 +19,16 @@ export function isNewer(latest, current) {
   return b.pre && !a.pre;
 }
 
-export function createUpdateChecker({ name, version, registry, intervalMs = DAY / 4 }) {
+export function createUpdateChecker({ version, versionUrl, intervalMs = DAY / 4 }) {
   const state = { latest: null, checkedAt: null };
   const disabled = !!process.env.EASYCOPY_NO_UPDATE_CHECK;
-  const base = (process.env.EASYCOPY_REGISTRY_URL || registry || 'https://registry.npmjs.org').replace(/\/$/, '');
+  const url = process.env.EASYCOPY_VERSION_URL || versionUrl || VERSION_URL;
 
   async function check() {
     if (disabled) return;
     try {
-      const url = base.endsWith('.json') ? base : `${base}/${encodeURIComponent(name)}/latest`;
       const res = await fetch(url, { signal: AbortSignal.timeout(5000), headers: { accept: 'application/json' } });
-      if (!res.ok) return; // z. B. noch nicht veröffentlicht: kein Hinweis, kein Fehler
+      if (!res.ok) return; // z. B. Repository noch nicht öffentlich: kein Hinweis, kein Fehler
       const data = await res.json();
       if (typeof data.version === 'string') {
         state.latest = data.version;
@@ -54,8 +56,7 @@ export function createUpdateChecker({ name, version, registry, intervalMs = DAY 
         current: version,
         latest: state.latest,
         available,
-        command: available ? `npm install -g ${name}@latest` : null,
-        npxCommand: available ? `npx ${name}@latest` : null,
+        command: available ? `npm install -g ${INSTALL_SPEC}` : null,
         enabled: !disabled,
       };
     },

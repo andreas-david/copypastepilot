@@ -11,6 +11,7 @@ import { AgentError, agentState, exclusive } from './agent.js';
 import { listApps, listWindows, assertWindow } from './windows.js';
 import { scanFields, copyFields } from './fields.js';
 import { checkStep, runStep } from './engine.js';
+import { INSTALL_SPEC } from './update.js';
 import {
   ValidationError,
   cleanPairs,
@@ -125,7 +126,7 @@ export function createServer({ token, port, version, name, webDir, updates }) {
     let m;
 
     if (method === 'GET' && pathname === '/api/status') {
-      return send(res, 200, { name, version, agent: await agent(), update: updates.info(), home: homeDir() });
+      return send(res, 200, { name, version, install: INSTALL_SPEC, agent: await agent(), update: updates.info(), home: homeDir() });
     }
     if (method === 'GET' && pathname === '/api/apps') return send(res, 200, { apps: await exclusive(listApps) });
     if (method === 'GET' && pathname === '/api/windows') {

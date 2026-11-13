@@ -10,7 +10,14 @@ Node.js ab Version 18 (npm ist dabei). Sonst nichts.
 ## Starten
 
 ```bash
-npx easycopy
+npx github:andreas-david/easycopy
+```
+
+Oder einmal installieren und danach nur noch `easycopy` tippen (so aktualisierst du auch: gleicher Befehl, nochmal ausführen):
+
+```bash
+npm install -g github:andreas-david/easycopy
+easycopy
 ```
 
 Der Befehl startet einen lokalen Server und öffnet die Oberfläche im Browser. Öffne immer die Adresse aus dem
@@ -54,10 +61,13 @@ Ordner lässt sich mit `EASYCOPY_HOME` einstellen.
 - Alles bleibt auf diesem Rechner. Feldinhalte werden nicht gespeichert und nicht gesendet.
 - Passwortfelder werden nie gelesen.
 - Der Server hört nur auf `127.0.0.1` und verlangt das Token.
-- Update-Hinweis: Das Programm fragt höchstens alle sechs Stunden bei der npm-Registry nach der neuesten Version
+- Update-Hinweis: Das Programm fragt höchstens alle sechs Stunden bei GitHub (die package.json im Repository) nach der neuesten Version
   (ohne Nutzerdaten). Abschalten mit `EASYCOPY_NO_UPDATE_CHECK=1`.
 
 ## Entwicklung
+
+Die gebaute Oberfläche (`web-dist/`) liegt im Repository, damit die Installation von GitHub ohne Bauen funktioniert.
+Nach Änderungen an `web/` also vor dem Commit bauen.
 
 ```bash
 npm install

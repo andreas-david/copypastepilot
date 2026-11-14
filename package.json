@@ -1,6 +1,6 @@
 {
   "name": "@andreasdavid/easycopy",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Kopiert Felder von einem Programmfenster in ein anderes – lokal, über die Bedienungshilfen",
   "keywords": [
     "copy",

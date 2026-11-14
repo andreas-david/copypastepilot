@@ -13,6 +13,15 @@ export class AgentError extends Error {
 
 let cachedBinary = null;
 
+/** Mögliche Dateinamen des Programms im bin-Ordner von agent-desktop, beste zuerst. */
+export function binaryNames(platform = process.platform, arch = process.arch) {
+  const exe = platform === 'win32' ? '.exe' : '';
+  // Unter Windows zählt nur eine .exe: die Datei ohne Endung ist dort nicht ausführbar.
+  const direct = platform === 'win32' ? ['agent-desktop.exe'] : ['agent-desktop'];
+  // Falls das Nachinstallations-Skript von agent-desktop nicht lief: die mitgelieferte Datei für diese Plattform nehmen.
+  return [...direct, `agent-desktop-${platform}-${arch}${exe}`];
+}
+
 /** Bevorzugt die mitinstallierte Abhängigkeit, sonst agent-desktop aus dem PATH. */
 export function binaryPath() {
   if (cachedBinary) return cachedBinary;
@@ -20,14 +29,14 @@ export function binaryPath() {
   try {
     const require = createRequire(import.meta.url);
     const dir = path.join(path.dirname(require.resolve('agent-desktop/package.json')), 'bin');
-    for (const name of ['agent-desktop', 'agent-desktop.exe']) {
+    for (const name of binaryNames()) {
       const p = path.join(dir, name);
       if (fs.existsSync(p)) return (cachedBinary = p);
     }
   } catch {
     /* Abhängigkeit nicht auffindbar: PATH versuchen */
   }
-  return (cachedBinary = 'agent-desktop');
+  return (cachedBinary = process.platform === 'win32' ? 'agent-desktop.exe' : 'agent-desktop');
 }
 
 /** Führt einen Befehl aus und liefert das Feld `data`. Wirft AgentError, wenn ok=false. */

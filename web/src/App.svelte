@@ -153,10 +153,19 @@
         {/if}
       </section>
     </div>
+
+    <footer>
+      Hilfe oder Fehler melden?
+      <a href="https://www.digitaldavid.de" target="_blank" rel="noopener noreferrer">www.digitaldavid.de</a>
+      ·
+      <a href="https://github.com/andreas-david/easycopy/issues" target="_blank" rel="noopener noreferrer">Fehler auf GitHub melden</a>
+    </footer>
   </div>
 {/if}
 
 <style>
+  footer a { color: var(--accent); }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 0.875rem; color: var(--muted); text-align: center; }
   .shell { max-width: 1100px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
   .narrow { max-width: 560px; margin: 4rem auto; padding: 0 1rem; }
   header { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 1rem; }

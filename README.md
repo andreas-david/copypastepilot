@@ -101,6 +101,12 @@ npm test
 npm start
 ```
 
+## Hilfe und Kontakt
+
+Fragen oder Probleme? Schau auf [www.digitaldavid.de](https://www.digitaldavid.de) oder melde einen Fehler auf
+[GitHub](https://github.com/andreas-david/easycopy/issues). Bei Problemen mit dem Start hilft die Ausgabe von
+`npx @andreasdavid/easycopy --check`.
+
 ## Lizenz
 
 MIT, siehe [LICENSE](LICENSE). EasyCopy nutzt [agent-desktop](https://www.npmjs.com/package/agent-desktop) (Apache-2.0).

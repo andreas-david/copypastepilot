@@ -51,7 +51,8 @@ Node.js:       ${process.versions.node} ${major >= 18 ? '(ok)' : '(zu alt, minde
 System:        ${process.platform} ${process.arch}
 agent-desktop: ${bin()}
 Zustand:       ${hints[st] || st}
-Konfigurationen: ${home()}`);
+Konfigurationen: ${home()}
+Hilfe/Kontakt: https://www.digitaldavid.de  ·  Fehler melden: https://github.com/andreas-david/easycopy/issues`);
   process.exit(st === 'ok' ? 0 : 2);
 }
 
@@ -86,7 +87,7 @@ async function listen(port) {
 const { port } = await listen(wanted);
 const url = `http://127.0.0.1:${port}/?t=${token}`;
 if (migrated) console.log('Konfigurationen aus ~/.field-copier wurden nach ~/.easycopy kopiert (der alte Ordner bleibt bestehen).\n');
-console.log(`EasyCopy ${pkg.version} läuft.\n\n  ${url}\n\nKonfigurationen liegen in: ${homeDir()}\nBeenden mit Strg+C.`);
+console.log(`EasyCopy ${pkg.version} läuft.\n\n  ${url}\n\nKonfigurationen liegen in: ${homeDir()}\nBeenden mit Strg+C.\n\nHilfe und Kontakt: https://www.digitaldavid.de\nFehler melden: https://github.com/andreas-david/easycopy/issues`);
 
 const state = await agentState();
 if (state === 'missing') {

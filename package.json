@@ -11,7 +11,10 @@
     "agent-desktop",
     "macos"
   ],
-  "author": "Andreas David",
+  "author": {
+    "name": "Andreas David",
+    "url": "https://www.digitaldavid.de"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",

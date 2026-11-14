@@ -1,9 +1,9 @@
-// Hinweis auf neue Versionen. Liest die package.json im GitHub-Repository (Branch main) und vergleicht die Version
+// Hinweis auf neue Versionen. Fragt die npm-Registry nach der neuesten veröffentlichten Version
 // (es werden weder Nutzerdaten noch Konfigurationen gesendet). Abschaltbar: EASYCOPY_NO_UPDATE_CHECK=1.
 const DAY = 24 * 60 * 60 * 1000;
-export const REPO = 'andreas-david/easycopy';
-export const INSTALL_SPEC = `github:${REPO}`; // so wird installiert und aktualisiert
-const VERSION_URL = `https://raw.githubusercontent.com/${REPO}/main/package.json`;
+export const PACKAGE = '@andreasdavid/easycopy';
+export const INSTALL_SPEC = PACKAGE; // so wird installiert und aktualisiert
+const VERSION_URL = `https://registry.npmjs.org/${PACKAGE.replace('/', '%2F')}/latest`;
 
 /** Vergleicht x.y.z numerisch; Vorabversionen (-beta) gelten als kleiner als die fertige Version. */
 export function isNewer(latest, current) {
@@ -28,7 +28,7 @@ export function createUpdateChecker({ version, versionUrl, intervalMs = DAY / 4 
     if (disabled) return;
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(5000), headers: { accept: 'application/json' } });
-      if (!res.ok) return; // z. B. Repository noch nicht öffentlich: kein Hinweis, kein Fehler
+      if (!res.ok) return; // z. B. noch nicht veröffentlicht: kein Hinweis, kein Fehler
       const data = await res.json();
       if (typeof data.version === 'string') {
         state.latest = data.version;
@@ -56,7 +56,7 @@ export function createUpdateChecker({ version, versionUrl, intervalMs = DAY / 4 
         current: version,
         latest: state.latest,
         available,
-        command: available ? `npm install -g ${INSTALL_SPEC}` : null,
+        command: available ? `npm install -g ${INSTALL_SPEC}@latest` : null,
         enabled: !disabled,
       };
     },

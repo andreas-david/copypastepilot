@@ -65,11 +65,11 @@ async function listen(port) {
 const { port } = await listen(wanted);
 const url = `http://127.0.0.1:${port}/?t=${token}`;
 if (migrated) console.log('Konfigurationen aus ~/.field-copier wurden nach ~/.easycopy kopiert (der alte Ordner bleibt bestehen).\n');
-console.log(`${pkg.name} ${pkg.version} läuft.\n\n  ${url}\n\nKonfigurationen liegen in: ${homeDir()}\nBeenden mit Strg+C.`);
+console.log(`EasyCopy ${pkg.version} läuft.\n\n  ${url}\n\nKonfigurationen liegen in: ${homeDir()}\nBeenden mit Strg+C.`);
 
 const state = await agentState();
 if (state === 'missing') {
-  console.warn(`\nHinweis: agent-desktop ließ sich nicht starten (${binaryPath()}). Bitte neu installieren: npm install -g ${INSTALL_SPEC}`);
+  console.warn(`\nHinweis: agent-desktop ließ sich nicht starten (${binaryPath()}). Bitte neu installieren: npm install -g ${INSTALL_SPEC}@latest`);
 } else if (state === 'no_screen_recording') {
   console.warn(`\nHinweis: Es fehlt die Freigabe "Bildschirmaufnahme" (macOS: Systemeinstellungen → Datenschutz & Sicherheit).\nOhne sie sind Fenstertitel nicht lesbar, und Fenster lassen sich nicht erkennen. Es wird nichts aufgenommen.\nHilfe dabei: ${binaryPath()} permissions --guide\nDanach das Programm, aus dem du gestartet hast, neu starten.`);
 } else if (state === 'no_permission') {

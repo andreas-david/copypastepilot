@@ -1,5 +1,5 @@
 {
-  "name": "easycopy",
+  "name": "@andreasdavid/easycopy",
   "version": "0.1.0",
   "description": "Kopiert Felder von einem Programmfenster in ein anderes – lokal, über die Bedienungshilfen",
   "keywords": [
@@ -38,7 +38,8 @@
     "dev:web": "vite web",
     "build": "vite build web",
     "start": "node bin/cli.js",
-    "test": "node --test"
+    "test": "node --test",
+    "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
     "agent-desktop": "^1.3.0"
@@ -48,5 +49,7 @@
     "svelte": "^5.0.0",
     "vite": "^6.0.0"
   },
-  "private": true
+  "publishConfig": {
+    "access": "public"
+  }
 }

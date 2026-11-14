@@ -3,17 +3,35 @@
 Kopiert Felder von einem Programmfenster in ein anderes. Läuft nur auf deinem Rechner und liest Fenster über die
 Bedienungshilfen des Betriebssystems (mit [agent-desktop](https://www.npmjs.com/package/agent-desktop)).
 
-## Voraussetzung
+## Installation für Einsteiger
 
-Node.js ab Version 18 (npm ist dabei). Sonst nichts.
+Du brauchst nur **Node.js**. Alles andere holt EasyCopy selbst.
 
-## Starten
+**1. Node.js installieren (einmalig).** Auf https://nodejs.org die Version „LTS“ laden und mit den Standardeinstellungen
+installieren. Danach das Terminal **neu öffnen**.
+
+**2. EasyCopy starten.** Öffne ein Terminal (Windows: Startmenü → „PowerShell“; macOS: Programme → Dienstprogramme →
+„Terminal“) und tippe:
 
 ```bash
 npx @andreasdavid/easycopy
 ```
 
-Oder einmal installieren und danach nur noch `easycopy` tippen:
+Beim ersten Mal lädt das etwas, dann öffnet sich EasyCopy im Browser. Das Terminalfenster bleibt offen, solange du
+EasyCopy nutzt. Zum Beenden Strg+C oder das Fenster schließen. Öffne immer die Adresse aus dem Terminal; sie enthält ein
+Zugangs-Token.
+
+**Noch einfacher, ohne Terminal:** Lade aus dem Ordner [`start`](start) die Datei `EasyCopy-starten.bat` (Windows) oder
+`EasyCopy-starten.command` (macOS) und starte sie per Doppelklick. Sie startet immer die neueste Version. Unter macOS
+beim ersten Mal Rechtsklick → „Öffnen“, weil die Datei nicht signiert ist.
+
+**Etwas klappt nicht?** Im Terminal zeigt dieser Befehl, was fehlt (Node-Version, agent-desktop, Freigaben):
+
+```bash
+npx @andreasdavid/easycopy --check
+```
+
+**Optional: dauerhaft installieren.** Dann genügt künftig der Befehl `easycopy`:
 
 ```bash
 npm install -g @andreasdavid/easycopy
@@ -23,17 +41,22 @@ easycopy
 Aktualisieren: `npm install -g @andreasdavid/easycopy@latest`. Der Quelltext liegt auf
 [GitHub](https://github.com/andreas-david/easycopy).
 
-Der Befehl startet einen lokalen Server und öffnet die Oberfläche im Browser. Öffne immer die Adresse aus dem
-Terminal; sie enthält ein Zugangs-Token.
+### Freigaben unter macOS
 
-Beim ersten Start unter macOS werden zwei Freigaben gebraucht (Systemeinstellungen → Datenschutz & Sicherheit), jeweils
-für das Programm, aus dem du den Befehl gestartet hast (meist das Terminal):
+Beim ersten Start werden zwei Freigaben gebraucht (Systemeinstellungen → Datenschutz & Sicherheit), jeweils für das
+Programm, aus dem du EasyCopy gestartet hast (meist das Terminal):
 
 - **Bedienungshilfen:** zum Lesen und Ausfüllen der Felder.
 - **Bildschirm- & Systemaudioaufnahme:** nur damit macOS die Fenstertitel herausgibt. Ohne sie siehst du statt der Titel
   nur den Programmnamen, und Fenster lassen sich nicht erkennen. Das Programm macht keine Bildschirmaufnahmen.
 
-Nach dem Erteilen das Terminal-Programm und den EasyCopy neu starten. Hilfe: `npx agent-desktop permissions --guide`.
+Nach dem Erteilen das Terminal-Programm und EasyCopy neu starten. Hilfe: `npx agent-desktop permissions --guide`.
+
+### Hinweise für Windows
+
+- Wird agent-desktop nicht gefunden, hilft `npm install -g agent-desktop`. EasyCopy sucht es dann selbst im Suchpfad
+  (`PATH`). Mit der Umgebungsvariable `AGENT_DESKTOP` lässt sich auch direkt eine Datei angeben.
+- Ist der Ordner für globale npm-Programme nicht im `PATH`, funktioniert `npx` trotzdem. Das ist der sichere Weg.
 
 ## Mehrere Seiten (Schritte)
 

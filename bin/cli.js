@@ -20,10 +20,12 @@ if (args.includes('--help') || args.includes('-h')) {
 
 Kopiert Felder von einem Programmfenster in ein anderes. Läuft nur auf diesem Rechner.
 
-  ${pkg.name} [--port 8766] [--no-open]
+  easycopy [--port 8766] [--no-open]
+  easycopy --check
 
   --port N     Port des lokalen Servers (Standard 8766)
   --no-open    Browser nicht automatisch öffnen
+  --check      Prüft, ob alles bereit ist (Node, agent-desktop, Freigaben), und startet nichts
   --version    Version anzeigen
 
 Umgebung: EASYCOPY_HOME (Ordner für Konfigurationen), EASYCOPY_NO_UPDATE_CHECK=1`);
@@ -32,6 +34,25 @@ Umgebung: EASYCOPY_HOME (Ordner für Konfigurationen), EASYCOPY_NO_UPDATE_CHECK=
 if (args.includes('--version') || args.includes('-v')) {
   console.log(pkg.version);
   process.exit(0);
+}
+
+if (args.includes('--check')) {
+  const { agentState: state, binaryPath: bin } = await import('../server/agent.js');
+  const { homeDir: home } = await import('../server/configs.js');
+  const st = await state();
+  const hints = {
+    ok: 'bereit',
+    missing: 'agent-desktop wurde nicht gefunden. Bitte neu installieren: npm install -g @andreasdavid/easycopy@latest (oder npm install -g agent-desktop)',
+    no_screen_recording: 'Freigabe „Bildschirmaufnahme“ fehlt (nur damit Fenstertitel lesbar sind). Danach Terminal neu starten.',
+    no_permission: 'Freigabe „Bedienungshilfen“ fehlt. Danach Terminal neu starten.',
+  };
+  console.log(`EasyCopy ${pkg.version}
+Node.js:       ${process.versions.node} ${major >= 18 ? '(ok)' : '(zu alt, mindestens 18)'}
+System:        ${process.platform} ${process.arch}
+agent-desktop: ${bin()}
+Zustand:       ${hints[st] || st}
+Konfigurationen: ${home()}`);
+  process.exit(st === 'ok' ? 0 : 2);
 }
 
 const { createServer } = await import('../server/http.js');

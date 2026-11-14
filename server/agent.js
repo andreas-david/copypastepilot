@@ -22,6 +22,28 @@ export function binaryNames(platform = process.platform, arch = process.arch) {
   return [...direct, `agent-desktop-${platform}-${arch}${exe}`];
 }
 
+/**
+ * Sucht agent-desktop in den Ordnern des PATH (z. B. nach `npm install -g agent-desktop`).
+ * Unter Windows steht dort nur agent-desktop.cmd, die nicht direkt startbar ist; die echte .exe liegt daneben unter
+ * node_modules/agent-desktop/bin.
+ */
+export function findOnPath(pathVar = process.env.PATH || process.env.Path || '', platform = process.platform, arch = process.arch) {
+  const names = binaryNames(platform, arch);
+  for (const dir of pathVar.split(path.delimiter).filter(Boolean)) {
+    for (const n of names.slice(0, 1)) {
+      const p = path.join(dir, n);
+      if (fs.existsSync(p)) return p;
+    }
+    if (platform === 'win32' && fs.existsSync(path.join(dir, 'agent-desktop.cmd'))) {
+      for (const n of names) {
+        const p = path.join(dir, 'node_modules', 'agent-desktop', 'bin', n);
+        if (fs.existsSync(p)) return p;
+      }
+    }
+  }
+  return null;
+}
+
 /** Bevorzugt die mitinstallierte Abhängigkeit, sonst agent-desktop aus dem PATH. */
 export function binaryPath() {
   if (cachedBinary) return cachedBinary;
@@ -36,7 +58,7 @@ export function binaryPath() {
   } catch {
     /* Abhängigkeit nicht auffindbar: PATH versuchen */
   }
-  return (cachedBinary = process.platform === 'win32' ? 'agent-desktop.exe' : 'agent-desktop');
+  return (cachedBinary = findOnPath() || (process.platform === 'win32' ? 'agent-desktop.exe' : 'agent-desktop'));
 }
 
 /** Führt einen Befehl aus und liefert das Feld `data`. Wirft AgentError, wenn ok=false. */

@@ -1,6 +1,6 @@
 {
   "name": "copypastepilot",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Kopiert Felder von einem Programmfenster in ein anderes – lokal, über die Bedienungshilfen",
   "keywords": [
     "copy",
@@ -20,7 +20,7 @@
     "type": "git",
     "url": "git+https://github.com/andreas-david/copypastepilot.git"
   },
-  "homepage": "https://github.com/andreas-david/copypastepilot#readme",
+  "homepage": "https://www.digitaldavid.de/copypastepilot",
   "bugs": {
     "url": "https://github.com/andreas-david/copypastepilot/issues"
   },

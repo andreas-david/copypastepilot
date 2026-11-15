@@ -52,7 +52,7 @@ System:        ${process.platform} ${process.arch}
 agent-desktop: ${bin()}
 Zustand:       ${hints[st] || st}
 Konfigurationen: ${home()}
-Hilfe/Kontakt: https://www.digitaldavid.de  ·  Fehler melden: https://github.com/andreas-david/copypastepilot/issues`);
+Hilfe/Kontakt: https://www.digitaldavid.de/copypastepilot  ·  Fehler melden: https://github.com/andreas-david/copypastepilot/issues`);
   process.exit(st === 'ok' ? 0 : 2);
 }
 
@@ -87,7 +87,7 @@ async function listen(port) {
 const { port } = await listen(wanted);
 const url = `http://127.0.0.1:${port}/?t=${token}`;
 if (migrated) console.log(`Konfigurationen aus ~/${migrated} wurden nach ~/.copypastepilot kopiert (der alte Ordner bleibt bestehen).\n`);
-console.log(`CopyPastePilot ${pkg.version} läuft.\n\n  ${url}\n\nKonfigurationen liegen in: ${homeDir()}\nBeenden mit Strg+C.\n\nHilfe und Kontakt: https://www.digitaldavid.de\nFehler melden: https://github.com/andreas-david/copypastepilot/issues`);
+console.log(`CopyPastePilot ${pkg.version} läuft.\n\n  ${url}\n\nKonfigurationen liegen in: ${homeDir()}\nBeenden mit Strg+C.\n\nHilfe und Kontakt: https://www.digitaldavid.de/copypastepilot\nFehler melden: https://github.com/andreas-david/copypastepilot/issues`);
 
 const state = await agentState();
 if (state === 'missing') {

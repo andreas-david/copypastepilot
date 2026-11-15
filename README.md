@@ -103,7 +103,7 @@ npm start
 
 ## Hilfe und Kontakt
 
-Fragen oder Probleme? Schau auf [www.digitaldavid.de](https://www.digitaldavid.de) oder melde einen Fehler auf
+Fragen oder Probleme? Schau auf [www.digitaldavid.de/copypastepilot](https://www.digitaldavid.de/copypastepilot) oder melde einen Fehler auf
 [GitHub](https://github.com/andreas-david/copypastepilot/issues). Bei Problemen mit dem Start hilft die Ausgabe von
 `npx copypastepilot --check`.
 

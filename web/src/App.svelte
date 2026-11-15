@@ -156,7 +156,7 @@
 
     <footer>
       Hilfe oder Fehler melden?
-      <a href="https://www.digitaldavid.de" target="_blank" rel="noopener noreferrer">www.digitaldavid.de</a>
+      <a href="https://www.digitaldavid.de/copypastepilot" target="_blank" rel="noopener noreferrer">www.digitaldavid.de/copypastepilot</a>
       ·
       <a href="https://github.com/andreas-david/copypastepilot/issues" target="_blank" rel="noopener noreferrer">Fehler auf GitHub melden</a>
     </footer>

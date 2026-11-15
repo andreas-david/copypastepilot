@@ -1,7 +1,7 @@
 // Hinweis auf neue Versionen. Fragt die npm-Registry nach der neuesten veröffentlichten Version
-// (es werden weder Nutzerdaten noch Konfigurationen gesendet). Abschaltbar: EASYCOPY_NO_UPDATE_CHECK=1.
+// (es werden weder Nutzerdaten noch Konfigurationen gesendet). Abschaltbar: COPYPASTEPILOT_NO_UPDATE_CHECK=1.
 const DAY = 24 * 60 * 60 * 1000;
-export const PACKAGE = '@andreasdavid/easycopy';
+export const PACKAGE = 'copypastepilot';
 export const INSTALL_SPEC = PACKAGE; // so wird installiert und aktualisiert
 const VERSION_URL = `https://registry.npmjs.org/${PACKAGE.replace('/', '%2F')}/latest`;
 
@@ -21,8 +21,8 @@ export function isNewer(latest, current) {
 
 export function createUpdateChecker({ version, versionUrl, intervalMs = DAY / 4 }) {
   const state = { latest: null, checkedAt: null };
-  const disabled = !!process.env.EASYCOPY_NO_UPDATE_CHECK;
-  const url = process.env.EASYCOPY_VERSION_URL || versionUrl || VERSION_URL;
+  const disabled = !!process.env.COPYPASTEPILOT_NO_UPDATE_CHECK;
+  const url = process.env.COPYPASTEPILOT_VERSION_URL || versionUrl || VERSION_URL;
 
   async function check() {
     if (disabled) return;

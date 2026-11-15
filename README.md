@@ -1,60 +1,60 @@
-# EasyCopy
+# CopyPastePilot
 
 Kopiert Felder von einem Programmfenster in ein anderes. Läuft nur auf deinem Rechner und liest Fenster über die
 Bedienungshilfen des Betriebssystems (mit [agent-desktop](https://www.npmjs.com/package/agent-desktop)).
 
 ## Installation für Einsteiger
 
-Du brauchst nur **Node.js**. Alles andere holt EasyCopy selbst.
+Du brauchst nur **Node.js**. Alles andere holt CopyPastePilot selbst.
 
 **1. Node.js installieren (einmalig).** Auf https://nodejs.org die Version „LTS“ laden und mit den Standardeinstellungen
 installieren. Danach das Terminal **neu öffnen**.
 
-**2. EasyCopy starten.** Öffne ein Terminal (Windows: Startmenü → „PowerShell“; macOS: Programme → Dienstprogramme →
+**2. CopyPastePilot starten.** Öffne ein Terminal (Windows: Startmenü → „PowerShell“; macOS: Programme → Dienstprogramme →
 „Terminal“) und tippe:
 
 ```bash
-npx @andreasdavid/easycopy
+npx copypastepilot
 ```
 
-Beim ersten Mal lädt das etwas, dann öffnet sich EasyCopy im Browser. Das Terminalfenster bleibt offen, solange du
-EasyCopy nutzt. Zum Beenden Strg+C oder das Fenster schließen. Öffne immer die Adresse aus dem Terminal; sie enthält ein
+Beim ersten Mal lädt das etwas, dann öffnet sich CopyPastePilot im Browser. Das Terminalfenster bleibt offen, solange du
+CopyPastePilot nutzt. Zum Beenden Strg+C oder das Fenster schließen. Öffne immer die Adresse aus dem Terminal; sie enthält ein
 Zugangs-Token.
 
-**Noch einfacher, ohne Terminal:** Lade aus dem Ordner [`start`](start) die Datei `EasyCopy-starten.bat` (Windows) oder
-`EasyCopy-starten.command` (macOS) und starte sie per Doppelklick. Sie startet immer die neueste Version. Unter macOS
+**Noch einfacher, ohne Terminal:** Lade aus dem Ordner [`start`](start) die Datei `CopyPastePilot-starten.bat` (Windows) oder
+`CopyPastePilot-starten.command` (macOS) und starte sie per Doppelklick. Sie startet immer die neueste Version. Unter macOS
 beim ersten Mal Rechtsklick → „Öffnen“, weil die Datei nicht signiert ist.
 
 **Etwas klappt nicht?** Im Terminal zeigt dieser Befehl, was fehlt (Node-Version, agent-desktop, Freigaben):
 
 ```bash
-npx @andreasdavid/easycopy --check
+npx copypastepilot --check
 ```
 
-**Optional: dauerhaft installieren.** Dann genügt künftig der Befehl `easycopy`:
+**Optional: dauerhaft installieren.** Dann genügt künftig der Befehl `copypastepilot`:
 
 ```bash
-npm install -g @andreasdavid/easycopy
-easycopy
+npm install -g copypastepilot
+copypastepilot
 ```
 
-Aktualisieren: `npm install -g @andreasdavid/easycopy@latest`. Der Quelltext liegt auf
-[GitHub](https://github.com/andreas-david/easycopy).
+Aktualisieren: `npm install -g copypastepilot@latest`. Der Quelltext liegt auf
+[GitHub](https://github.com/andreas-david/copypastepilot).
 
 ### Freigaben unter macOS
 
 Beim ersten Start werden zwei Freigaben gebraucht (Systemeinstellungen → Datenschutz & Sicherheit), jeweils für das
-Programm, aus dem du EasyCopy gestartet hast (meist das Terminal):
+Programm, aus dem du CopyPastePilot gestartet hast (meist das Terminal):
 
 - **Bedienungshilfen:** zum Lesen und Ausfüllen der Felder.
 - **Bildschirm- & Systemaudioaufnahme:** nur damit macOS die Fenstertitel herausgibt. Ohne sie siehst du statt der Titel
   nur den Programmnamen, und Fenster lassen sich nicht erkennen. Das Programm macht keine Bildschirmaufnahmen.
 
-Nach dem Erteilen das Terminal-Programm und EasyCopy neu starten. Hilfe: `npx agent-desktop permissions --guide`.
+Nach dem Erteilen das Terminal-Programm und CopyPastePilot neu starten. Hilfe: `npx agent-desktop permissions --guide`.
 
 ### Hinweise für Windows
 
-- Wird agent-desktop nicht gefunden, hilft `npm install -g agent-desktop`. EasyCopy sucht es dann selbst im Suchpfad
+- Wird agent-desktop nicht gefunden, hilft `npm install -g agent-desktop`. CopyPastePilot sucht es dann selbst im Suchpfad
   (`PATH`). Mit der Umgebungsvariable `AGENT_DESKTOP` lässt sich auch direkt eine Datei angeben.
 - Ist der Ordner für globale npm-Programme nicht im `PATH`, funktioniert `npx` trotzdem. Das ist der sichere Weg.
 
@@ -73,14 +73,14 @@ Oben rechts wählst du zwischen Automatisch (folgt dem System), Hell und Dunkel.
 ## Fenster und Tabs
 
 Bei Browsern (getestet: Chrome) erscheint jeder Tab einzeln in der Liste. Nur der vordere Tab eines Fensters ist lesbar.
-Deshalb holt der EasyCopy einen Hintergrund-Tab zum Lesen, Prüfen und Schreiben kurz nach vorn und stellt danach den
-vorherigen Tab wieder her. Liegen EasyCopy und Ziel im selben Browserfenster, springt die Ansicht dabei kurz um.
+Deshalb holt CopyPastePilot einen Hintergrund-Tab zum Lesen, Prüfen und Schreiben kurz nach vorn und stellt danach den
+vorherigen Tab wieder her. Liegen CopyPastePilot und Ziel im selben Browserfenster, springt die Ansicht dabei kurz um.
 Zusätze im Tab-Namen wie „– Arbeitsspeichernutzung – 12 MB“ werden entfernt. Das Wiederfinden läuft über „Titel enthält …“.
 
 ## Wo liegen die Konfigurationen?
 
-Je Konfiguration eine JSON-Datei in `~/.easycopy/configs/`. Du kannst sie sichern oder weitergeben. Ein anderer
-Ordner lässt sich mit `EASYCOPY_HOME` einstellen.
+Je Konfiguration eine JSON-Datei in `~/.copypastepilot/configs/`. Du kannst sie sichern oder weitergeben. Ein anderer
+Ordner lässt sich mit `COPYPASTEPILOT_HOME` einstellen.
 
 ## Datenschutz
 
@@ -88,7 +88,7 @@ Ordner lässt sich mit `EASYCOPY_HOME` einstellen.
 - Passwortfelder werden nie gelesen.
 - Der Server hört nur auf `127.0.0.1` und verlangt das Token.
 - Update-Hinweis: Das Programm fragt höchstens alle sechs Stunden bei der npm-Registry nach der neuesten Version
-  (ohne Nutzerdaten). Abschalten mit `EASYCOPY_NO_UPDATE_CHECK=1`.
+  (ohne Nutzerdaten). Abschalten mit `COPYPASTEPILOT_NO_UPDATE_CHECK=1`.
 
 ## Entwicklung
 
@@ -104,9 +104,9 @@ npm start
 ## Hilfe und Kontakt
 
 Fragen oder Probleme? Schau auf [www.digitaldavid.de](https://www.digitaldavid.de) oder melde einen Fehler auf
-[GitHub](https://github.com/andreas-david/easycopy/issues). Bei Problemen mit dem Start hilft die Ausgabe von
-`npx @andreasdavid/easycopy --check`.
+[GitHub](https://github.com/andreas-david/copypastepilot/issues). Bei Problemen mit dem Start hilft die Ausgabe von
+`npx copypastepilot --check`.
 
 ## Lizenz
 
-MIT, siehe [LICENSE](LICENSE). EasyCopy nutzt [agent-desktop](https://www.npmjs.com/package/agent-desktop) (Apache-2.0).
+MIT, siehe [LICENSE](LICENSE). CopyPastePilot nutzt [agent-desktop](https://www.npmjs.com/package/agent-desktop) (Apache-2.0).

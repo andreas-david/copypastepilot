@@ -147,7 +147,7 @@ export async function checkPairs(src, dst, pairs, { passive = false } = {}) {
   return { total: pairs.length, problems };
 }
 
-/** Das Fenster, das gerade vorn ist (bei der Einrichtung: die Seite von EasyCopy). Nur Best-Effort. */
+/** Das Fenster, das gerade vorn ist (bei der Einrichtung: die Seite von CopyPastePilot). Nur Best-Effort. */
 async function focusedWindow() {
   try {
     const wins = (await ad(['list-windows', '--timeout-ms', 8000], 30000)) || [];

@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 const home = fs.mkdtempSync(path.join(os.tmpdir(), 'fc-test-'));
-process.env.EASYCOPY_HOME = home;
+process.env.COPYPASTEPILOT_HOME = home;
 const { normalize, validateConfig, stepHash, saveConfig, getConfig, listConfigs, setLastRun, MAX_STEPS } = await import('./configs.js');
 
 const field = (label, role = 'textfield', occurrence = 0) => ({ role, label, occurrence });
@@ -74,11 +74,22 @@ test('Ungültige IDs (Pfadtricks) werden abgelehnt', () => {
 
 test('migrateLegacyHome kopiert den alten Ordner einmalig', async () => {
   const { migrateLegacyHome } = await import('./configs.js');
-  const h = fs.mkdtempSync(path.join(os.tmpdir(), 'ec-home-'));
+  const h = fs.mkdtempSync(path.join(os.tmpdir(), 'cpp-home-'));
   fs.mkdirSync(path.join(h, '.field-copier', 'configs'), { recursive: true });
   fs.writeFileSync(path.join(h, '.field-copier', 'configs', 'a.json'), '{}');
-  assert.equal(migrateLegacyHome(h), true);
-  assert.ok(fs.existsSync(path.join(h, '.easycopy', 'configs', 'a.json')));
+  assert.equal(migrateLegacyHome(h), '.field-copier');
+  assert.ok(fs.existsSync(path.join(h, '.copypastepilot', 'configs', 'a.json')));
   assert.ok(fs.existsSync(path.join(h, '.field-copier', 'configs', 'a.json')));
-  assert.equal(migrateLegacyHome(h), false);
+  assert.equal(migrateLegacyHome(h), null);
+});
+
+test('migrateLegacyHome bevorzugt .easycopy vor .field-copier', async () => {
+  const { migrateLegacyHome } = await import('./configs.js');
+  const h = fs.mkdtempSync(path.join(os.tmpdir(), 'cpp-home-'));
+  for (const d of ['.easycopy', '.field-copier']) {
+    fs.mkdirSync(path.join(h, d, 'configs'), { recursive: true });
+    fs.writeFileSync(path.join(h, d, 'configs', d + '.json'), '{}');
+  }
+  assert.equal(migrateLegacyHome(h), '.easycopy');
+  assert.ok(fs.existsSync(path.join(h, '.copypastepilot', 'configs', '.easycopy.json')));
 });

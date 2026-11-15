@@ -1,6 +1,6 @@
 {
-  "name": "@andreasdavid/easycopy",
-  "version": "0.1.1",
+  "name": "copypastepilot",
+  "version": "0.2.0",
   "description": "Kopiert Felder von einem Programmfenster in ein anderes – lokal, über die Bedienungshilfen",
   "keywords": [
     "copy",
@@ -18,15 +18,15 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/andreas-david/easycopy.git"
+    "url": "git+https://github.com/andreas-david/copypastepilot.git"
   },
-  "homepage": "https://github.com/andreas-david/easycopy#readme",
+  "homepage": "https://github.com/andreas-david/copypastepilot#readme",
   "bugs": {
-    "url": "https://github.com/andreas-david/easycopy/issues"
+    "url": "https://github.com/andreas-david/copypastepilot/issues"
   },
   "type": "module",
   "bin": {
-    "easycopy": "bin/cli.js"
+    "copypastepilot": "bin/cli.js"
   },
   "files": [
     "bin",

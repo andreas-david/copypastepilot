@@ -99,7 +99,7 @@
         {#each windows as w}<option value={w.key}>{w.tab ? '▭ Tab: ' : ''}{w.title}{w.count > 1 ? ` (×${w.count})` : ''}</option>{/each}
       </select>
       <span class="muted small hint">
-        Bei Browsern erscheint jeder Tab einzeln. Zum Lesen und Schreiben holt der EasyCopy einen Hintergrund-Tab kurz nach vorn und stellt danach den vorherigen Tab wieder her.
+        Bei Browsern erscheint jeder Tab einzeln. Zum Lesen und Schreiben holt CopyPastePilot einen Hintergrund-Tab kurz nach vorn und stellt danach den vorherigen Tab wieder her.
       </span>
     </label>
   {/if}

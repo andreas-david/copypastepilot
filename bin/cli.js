@@ -20,15 +20,15 @@ if (args.includes('--help') || args.includes('-h')) {
 
 Kopiert Felder von einem Programmfenster in ein anderes. Läuft nur auf diesem Rechner.
 
-  easycopy [--port 8766] [--no-open]
-  easycopy --check
+  copypastepilot [--port 8766] [--no-open]
+  copypastepilot --check
 
   --port N     Port des lokalen Servers (Standard 8766)
   --no-open    Browser nicht automatisch öffnen
   --check      Prüft, ob alles bereit ist (Node, agent-desktop, Freigaben), und startet nichts
   --version    Version anzeigen
 
-Umgebung: EASYCOPY_HOME (Ordner für Konfigurationen), EASYCOPY_NO_UPDATE_CHECK=1`);
+Umgebung: COPYPASTEPILOT_HOME (Ordner für Konfigurationen), COPYPASTEPILOT_NO_UPDATE_CHECK=1`);
   process.exit(0);
 }
 if (args.includes('--version') || args.includes('-v')) {
@@ -42,17 +42,17 @@ if (args.includes('--check')) {
   const st = await state();
   const hints = {
     ok: 'bereit',
-    missing: 'agent-desktop wurde nicht gefunden. Bitte neu installieren: npm install -g @andreasdavid/easycopy@latest (oder npm install -g agent-desktop)',
+    missing: 'agent-desktop wurde nicht gefunden. Bitte neu installieren: npm install -g copypastepilot@latest (oder npm install -g agent-desktop)',
     no_screen_recording: 'Freigabe „Bildschirmaufnahme“ fehlt (nur damit Fenstertitel lesbar sind). Danach Terminal neu starten.',
     no_permission: 'Freigabe „Bedienungshilfen“ fehlt. Danach Terminal neu starten.',
   };
-  console.log(`EasyCopy ${pkg.version}
+  console.log(`CopyPastePilot ${pkg.version}
 Node.js:       ${process.versions.node} ${major >= 18 ? '(ok)' : '(zu alt, mindestens 18)'}
 System:        ${process.platform} ${process.arch}
 agent-desktop: ${bin()}
 Zustand:       ${hints[st] || st}
 Konfigurationen: ${home()}
-Hilfe/Kontakt: https://www.digitaldavid.de  ·  Fehler melden: https://github.com/andreas-david/easycopy/issues`);
+Hilfe/Kontakt: https://www.digitaldavid.de  ·  Fehler melden: https://github.com/andreas-david/copypastepilot/issues`);
   process.exit(st === 'ok' ? 0 : 2);
 }
 
@@ -60,16 +60,16 @@ const { createServer } = await import('../server/http.js');
 const { createUpdateChecker, INSTALL_SPEC } = await import('../server/update.js');
 const { agentState, binaryPath } = await import('../server/agent.js');
 const { homeDir, migrateLegacyHome } = await import('../server/configs.js');
-const migrated = !process.env.EASYCOPY_HOME && migrateLegacyHome();
+const migrated = process.env.COPYPASTEPILOT_HOME ? null : migrateLegacyHome();
 
 const portArg = args.indexOf('--port');
-const wanted = portArg >= 0 ? Number(args[portArg + 1]) : Number(process.env.EASYCOPY_PORT || 8766);
+const wanted = portArg >= 0 ? Number(args[portArg + 1]) : Number(process.env.COPYPASTEPILOT_PORT || 8766);
 if (!Number.isInteger(wanted) || wanted < 1024 || wanted > 65535) {
   console.error('Ungültiger Port (erlaubt: 1024–65535).');
   process.exit(1);
 }
 
-const token = process.env.EASYCOPY_TOKEN || crypto.randomBytes(16).toString('base64url');
+const token = process.env.COPYPASTEPILOT_TOKEN || crypto.randomBytes(16).toString('base64url');
 const updates = createUpdateChecker({ version: pkg.version });
 
 async function listen(port) {
@@ -86,8 +86,8 @@ async function listen(port) {
 
 const { port } = await listen(wanted);
 const url = `http://127.0.0.1:${port}/?t=${token}`;
-if (migrated) console.log('Konfigurationen aus ~/.field-copier wurden nach ~/.easycopy kopiert (der alte Ordner bleibt bestehen).\n');
-console.log(`EasyCopy ${pkg.version} läuft.\n\n  ${url}\n\nKonfigurationen liegen in: ${homeDir()}\nBeenden mit Strg+C.\n\nHilfe und Kontakt: https://www.digitaldavid.de\nFehler melden: https://github.com/andreas-david/easycopy/issues`);
+if (migrated) console.log(`Konfigurationen aus ~/${migrated} wurden nach ~/.copypastepilot kopiert (der alte Ordner bleibt bestehen).\n`);
+console.log(`CopyPastePilot ${pkg.version} läuft.\n\n  ${url}\n\nKonfigurationen liegen in: ${homeDir()}\nBeenden mit Strg+C.\n\nHilfe und Kontakt: https://www.digitaldavid.de\nFehler melden: https://github.com/andreas-david/copypastepilot/issues`);
 
 const state = await agentState();
 if (state === 'missing') {

@@ -1,4 +1,4 @@
-// Konfigurationen: je eine JSON-Datei im Benutzerordner (~/.easycopy/configs), leicht zu sichern und zu teilen.
+// Konfigurationen: je eine JSON-Datei im Benutzerordner (~/.copypastepilot/configs), leicht zu sichern und zu teilen.
 // Schema 2: eine Konfiguration besteht aus Schritten (z. B. Seite 1 und Folgeseite eines Formulars).
 // Schema 1 (ein Schritt direkt in der Konfiguration) wird beim Lesen automatisch umgewandelt.
 import fs from 'node:fs';
@@ -7,14 +7,21 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { INPUT_ROLES } from './fields.js';
 
-export const homeDir = () => process.env.EASYCOPY_HOME || path.join(os.homedir(), '.easycopy');
-/** Übernimmt Konfigurationen des früheren Arbeitsnamens (~/.field-copier) einmalig in ~/.easycopy. Kopiert nur, löscht nichts. */
+export const homeDir = () => process.env.COPYPASTEPILOT_HOME || path.join(os.homedir(), '.copypastepilot');
+// Frühere Namen des Programms (neuester zuerst).
+const LEGACY_DIRS = ['.easycopy', '.field-copier'];
+
+/**
+ * Übernimmt Konfigurationen aus dem Ordner eines früheren Namens einmalig in ~/.copypastepilot.
+ * Kopiert nur, löscht nichts. Gibt den Namen des übernommenen Ordners zurück oder null.
+ */
 export function migrateLegacyHome(home = os.homedir()) {
-  const oldDir = path.join(home, '.field-copier');
-  const newDir = path.join(home, '.easycopy');
-  if (fs.existsSync(newDir) || !fs.existsSync(oldDir)) return false;
-  fs.cpSync(oldDir, newDir, { recursive: true });
-  return true;
+  const newDir = path.join(home, '.copypastepilot');
+  if (fs.existsSync(newDir)) return null;
+  const old = LEGACY_DIRS.find((d) => fs.existsSync(path.join(home, d)));
+  if (!old) return null;
+  fs.cpSync(path.join(home, old), newDir, { recursive: true });
+  return old;
 }
 
 const configDir = () => path.join(homeDir(), 'configs');

@@ -70,7 +70,7 @@
 {:else}
   <div class="shell">
     <header>
-      <h1>EasyCopy</h1>
+      <h1>CopyPastePilot</h1>
       {#if status}<span class="muted small">Version {status.version}</span>{/if}
       <div class="theme" role="group" aria-label="Darstellung">
         {#each themes as [value, text]}
@@ -102,7 +102,7 @@
           <strong>Die Freigabe „Bildschirmaufnahme“ fehlt.</strong> Ohne sie gibt macOS keine Fenstertitel heraus, und Fenster
           lassen sich nicht erkennen (du siehst dann nur den Programmnamen). Es wird nichts aufgenommen. Öffne Systemeinstellungen →
           Datenschutz &amp; Sicherheit → Bildschirm- &amp; Systemaudioaufnahme und schalte das Programm ein, aus dem du den
-          EasyCopy gestartet hast. Danach dieses Programm und den EasyCopy neu starten.
+          CopyPastePilot gestartet hast. Danach dieses Programm und CopyPastePilot neu starten.
           Hilfe im Terminal: <code>npx agent-desktop permissions --guide</code>
         </div>
       </div>
@@ -110,7 +110,7 @@
       <div class="banner warn" role="alert">
         <div>
           <strong>Die Freigabe für Bedienungshilfen fehlt.</strong> Öffne Systemeinstellungen → Datenschutz &amp; Sicherheit →
-          Bedienungshilfen und schalte dort das Programm ein, aus dem du den EasyCopy gestartet hast (meist das Terminal).
+          Bedienungshilfen und schalte dort das Programm ein, aus dem du CopyPastePilot gestartet hast (meist das Terminal).
           Danach erkennt die Seite es automatisch.
         </div>
       </div>
@@ -158,7 +158,7 @@
       Hilfe oder Fehler melden?
       <a href="https://www.digitaldavid.de" target="_blank" rel="noopener noreferrer">www.digitaldavid.de</a>
       ·
-      <a href="https://github.com/andreas-david/easycopy/issues" target="_blank" rel="noopener noreferrer">Fehler auf GitHub melden</a>
+      <a href="https://github.com/andreas-david/copypastepilot/issues" target="_blank" rel="noopener noreferrer">Fehler auf GitHub melden</a>
     </footer>
   </div>
 {/if}

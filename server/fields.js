@@ -1,6 +1,7 @@
 // Felder lesen und kopieren. Portiert aus dem Python-Runner; gleiches Verhalten, gleiche Zähl-Nummern.
 import { ad, AgentError } from './agent.js';
 import { selectTab } from './windows.js';
+import { t } from './i18n.js';
 
 export const INPUT_ROLES = ['textfield', 'textarea', 'combobox', 'checkbox', 'radiobutton', 'slider', 'switch', 'stepper'];
 const TEXT_ROLES = ['statictext']; // Überschriften: ihr Text steckt in untergeordnetem statictext (value wäre nur die Ebene)
@@ -76,7 +77,7 @@ async function scanFieldsRaw(app, wid, includeEmpty, tab = null) {
       continue;
     }
     const base = { kind: 'input', role, label: name, context, occurrence };
-    if ((n.states || []).includes('secure')) items.push({ ...base, value: '(Passwortfeld, nicht gelesen)', secure: true });
+    if ((n.states || []).includes('secure')) items.push({ ...base, value: t('field.secureNotRead'), secure: true });
     else if (n.value !== null && n.value !== undefined && n.value !== '') items.push({ ...base, value: String(n.value).slice(0, MAX_VALUE), secure: false });
     else if (includeEmpty) items.push({ ...base, value: '', secure: false });
     else empty += 1;
@@ -121,7 +122,11 @@ export async function collectSource(app, wid) {
 }
 
 const describe = (f) =>
-  f.role === 'statictext' ? `Text Nr. ${f.occurrence + 1}${f.label ? ` in „${f.label}“` : ''}` : `„${f.label || '(ohne Beschriftung)'}“`;
+  f.role === 'statictext'
+    ? f.label
+      ? t('field.textIn', { n: f.occurrence + 1, label: f.label })
+      : t('field.text', { n: f.occurrence + 1 })
+    : t('field.quoted', { text: f.label || t('field.noLabel') });
 
 /** Prüft ohne zu schreiben, welche Feldpaare in den beiden Fenstern vorhanden sind. */
 export async function checkPairs(src, dst, pairs, { passive = false } = {}) {
@@ -139,10 +144,10 @@ export async function checkPairs(src, dst, pairs, { passive = false } = {}) {
   for (const p of pairs) {
     const sf = s.get(fieldKey(p.src));
     const df = d.get(fieldKey(p.dst));
-    if (!sf) problems.push(`Quelle ${describe(p.src)} fehlt`);
-    else if (sf.secure) problems.push(`Quellfeld ${describe(p.src)} ist ein Passwortfeld`);
-    if (!df || !df.ref) problems.push(`Zielfeld ${describe(p.dst)} fehlt`);
-    else if (df.secure) problems.push(`Zielfeld ${describe(p.dst)} ist ein Passwortfeld`);
+    if (!sf) problems.push(t('problem.sourceMissing', { field: describe(p.src) }));
+    else if (sf.secure) problems.push(t('problem.sourceSecure', { field: describe(p.src) }));
+    if (!df || !df.ref) problems.push(t('problem.targetMissing', { field: describe(p.dst) }));
+    else if (df.secure) problems.push(t('problem.targetSecure', { field: describe(p.dst) }));
   }
   return { total: pairs.length, problems };
 }
@@ -220,17 +225,17 @@ async function copyFieldsRaw(src, dst, pairs) {
     const sf = s.get(fieldKey(p.src));
     const df = d.get(fieldKey(p.dst));
     try {
-      if (!sf) throw new AgentError('Quellfeld nicht gefunden');
-      if (!df || !df.ref) throw new AgentError('Zielfeld nicht gefunden');
-      if (sf.secure || df.secure) throw new AgentError('Passwortfelder werden nicht kopiert');
+      if (!sf) throw new AgentError(t('copy.sourceNotFound'));
+      if (!df || !df.ref) throw new AgentError(t('copy.targetNotFound'));
+      if (sf.secure || df.secure) throw new AgentError(t('copy.secure'));
       const value = sf.value === null || sf.value === undefined ? '' : String(sf.value);
       await ad(['set-value', df.ref, value]);
       const back = readValue(await ad(['get', df.ref, '--property', 'value']));
-      if (back !== value) throw new AgentError('Zielfeld zeigt nach dem Schreiben einen anderen Wert');
-      results.push({ ok: true, detail: 'kopiert und geprüft' });
+      if (back !== value) throw new AgentError(t('copy.differs'));
+      results.push({ ok: true, detail: t('copy.ok') });
     } catch (e) {
       let msg = e.message;
-      if (msg.includes('does not match the requested change')) msg = 'Zielfeld hat den Wert nicht übernommen (Sind beide Fenster sichtbar und nicht verdeckt?)';
+      if (msg.includes('does not match the requested change')) msg = t('copy.notAccepted');
       results.push({ ok: false, detail: msg });
     }
   }

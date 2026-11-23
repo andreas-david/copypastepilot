@@ -1,7 +1,7 @@
 {
   "name": "copypastepilot",
-  "version": "0.2.1",
-  "description": "Kopiert Felder von einem Programmfenster in ein anderes – lokal, über die Bedienungshilfen",
+  "version": "0.3.0",
+  "description": "Copies fields from one program window into another, including multi-page forms. Runs locally via the OS accessibility features.",
   "keywords": [
     "copy",
     "paste",
@@ -32,6 +32,7 @@
     "bin",
     "server",
     "!server/*.test.js",
+    "locales",
     "web-dist"
   ],
   "engines": {

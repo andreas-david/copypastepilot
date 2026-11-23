@@ -3,11 +3,11 @@
   // klickt dort auf „Weiter“ und startet erst dann den nächsten Schritt hier im Tool.
   import { createEventDispatcher, onDestroy } from 'svelte';
   import { api, ago } from './api.js';
+  import { t, lang } from './i18n.js';
 
   export let config;
 
   const dispatch = createEventDispatcher();
-  const DEFAULT_AFTER = 'Prüfe die Angaben im Zielfenster und klicke dort auf „Weiter“ (oder öffne die nächste Seite). Starte danach hier den nächsten Schritt.';
 
   let stepIdx = 0;
   let check = null; // { ready, items }
@@ -22,7 +22,7 @@
   $: multi = steps.length > 1;
   $: step = steps[Math.min(stepIdx, steps.length - 1)];
   $: isLast = stepIdx >= steps.length - 1;
-  $: stepLabel = multi ? `Schritt ${stepIdx + 1} von ${steps.length}${step.title ? `: ${step.title}` : ''}` : '';
+  $: stepLabel = multi ? `${$t('ui.detail.stepOf', { n: stepIdx + 1, total: steps.length })}${step.title ? `: ${step.title}` : ''}` : '';
 
   async function runCheck() {
     if (checking || running) return;
@@ -33,7 +33,7 @@
       const r = await api('POST', `/api/configs/${id}/check`, { step: idx });
       if (id === config.id && idx === stepIdx) check = r;
     } catch (e) {
-      if (id === config.id && idx === stepIdx) check = { ready: false, items: [{ ok: false, label: 'Prüfung fehlgeschlagen', detail: e.message }] };
+      if (id === config.id && idx === stepIdx) check = { ready: false, items: [{ ok: false, label: $t('ui.detail.checkFailed'), detail: e.message }] };
     }
     checking = false;
   }
@@ -83,8 +83,10 @@
   }
 
   // Gespeichert werden nie Inhalte. Ein Text wird daher nach seiner Lage beschrieben.
-  const fieldName = (f) =>
-    f.role === 'statictext' ? `Text Nr. ${f.occurrence + 1}${f.label ? ` in „${f.label}“` : ''}` : `${f.label || '(ohne Beschriftung)'}${f.occurrence > 0 ? ` #${f.occurrence + 1}` : ''}`;
+  const fieldName = (f, tr) =>
+    f.role === 'statictext'
+      ? f.label ? tr('field.textIn', { n: f.occurrence + 1, label: f.label }) : tr('field.text', { n: f.occurrence + 1 })
+      : `${f.label || tr('field.noLabel')}${f.occurrence > 0 ? ` #${f.occurrence + 1}` : ''}`;
 
   $: okCount = result ? result.pairs.filter((p) => p.ok).length : 0;
   onDestroy(() => clearInterval(timer));
@@ -95,44 +97,44 @@
     <div>
       <h2>{config.name}</h2>
       <p class="muted small">
-        {steps[0].source.app} „{steps[0].source.windowContains}“ → {steps[0].target.app} „{steps[0].target.windowContains}“{multi ? ` · ${steps.length} Schritte` : ''}
+        {steps[0].source.app} „{steps[0].source.windowContains}“ → {steps[0].target.app} „{steps[0].target.windowContains}“{multi ? ` · ${$t('ui.stepCount', { count: steps.length })}` : ''}
       </p>
     </div>
     <div class="actions">
-      <button on:click={() => dispatch('edit')}>Bearbeiten</button>
+      <button on:click={() => dispatch('edit')}>{$t('ui.edit')}</button>
       {#if confirmDelete}
-        <button class="danger" on:click={remove}>Wirklich löschen</button>
-        <button on:click={() => (confirmDelete = false)}>Abbrechen</button>
+        <button class="danger" on:click={remove}>{$t('ui.detail.deleteConfirm')}</button>
+        <button on:click={() => (confirmDelete = false)}>{$t('ui.cancel')}</button>
       {:else}
-        <button class="danger" on:click={() => (confirmDelete = true)}>Löschen</button>
+        <button class="danger" on:click={() => (confirmDelete = true)}>{$t('ui.delete')}</button>
       {/if}
     </div>
   </header>
 
   <section>
-    <h3>So bereitest du es vor</h3>
+    <h3>{$t('ui.detail.prepare')}</h3>
     {#if config.help}
       <p class="help">{config.help}</p>
     {:else}
-      <p class="muted">Noch kein Hilfetext. Unter „Bearbeiten“ kannst du aufschreiben, welche Seiten vorher geöffnet sein müssen.</p>
+      <p class="muted">{$t('ui.detail.noHelp')}</p>
     {/if}
   </section>
 
   {#if multi}
-    <ol class="stepper" aria-label="Schritte">
+    <ol class="stepper" aria-label={$t('ui.steps')}>
       {#each steps as s, i}
         <li class:current={i === stepIdx} class:done={i < stepIdx || (i === stepIdx && result?.ok)}>
           <span class="n">{i < stepIdx || (i === stepIdx && result?.ok) ? '✓' : i + 1}</span>
-          <span>{s.title || `Seite ${i + 1}`}</span>
+          <span>{s.title || $t('ui.detail.pageN', { n: i + 1 })}</span>
         </li>
       {/each}
     </ol>
   {/if}
 
   <section>
-    <h3>Ist alles bereit?{multi ? ` – ${stepLabel}` : ''}</h3>
+    <h3>{$t('ui.detail.ready')}{multi ? ` – ${stepLabel}` : ''}</h3>
     {#if !check}
-      <p class="muted" role="status">Prüfe …</p>
+      <p class="muted" role="status">{$t('ui.detail.checking')}</p>
     {:else}
       <ul class="checks" aria-live="polite">
         {#each check.items as i}
@@ -144,8 +146,7 @@
       </ul>
       {#if !check.ready && !result?.ok}
         <p class="muted small">
-          Sobald die Fenster geöffnet sind, erkennt die Seite es automatisch. Bei Browsern zählt der vordere Tab: Die Seite
-          muss in einem eigenen Fenster liegen oder dort gerade angezeigt werden.{#if multi && stepIdx > 0} Bei Folgeschritten: Ist im Zielfenster schon die nächste Seite offen („Weiter“ geklickt)?{/if}
+          {$t('ui.detail.notReady')}{#if multi && stepIdx > 0} {$t('ui.detail.notReadyNext')}{/if}
         </p>
       {/if}
     {/if}
@@ -153,24 +154,24 @@
 
   <section class="run">
     <button class="primary big" disabled={!check?.ready || running || result?.ok} on:click={execute}>
-      {running ? 'Läuft …' : multi ? `Schritt ${stepIdx + 1} ausführen` : 'Ausführen'}
+      {running ? $t('ui.detail.running') : multi ? $t('ui.detail.runStep', { n: stepIdx + 1 }) : $t('ui.detail.run')}
     </button>
-    {#if running}<p class="muted small" role="status">Die beiden Fenster kommen dabei kurz nach vorn, danach geht es hier weiter.</p>{/if}
+    {#if running}<p class="muted small" role="status">{$t('ui.detail.frontNote')}</p>{/if}
   </section>
 
   {#if result}
     <section aria-live="polite">
       {#if result.error}
-        <p class="bad"><strong>Nicht ausgeführt:</strong> {result.error}</p>
+        <p class="bad"><strong>{$t('ui.detail.notRun')}</strong> {result.error}</p>
       {:else}
         <h3 class={result.ok ? 'ok' : 'bad'}>
-          {result.ok ? `Fertig: ${okCount} von ${result.pairs.length} Feldern kopiert` : `Nicht alles hat geklappt: ${okCount} von ${result.pairs.length} Feldern kopiert`}
+          {$t(result.ok ? 'ui.detail.done' : 'ui.detail.partial', { ok: okCount, total: result.pairs.length })}
         </h3>
         <table>
           <tbody>
             {#each result.pairs as p, n}
               <tr>
-                <td>{fieldName(step.pairs[n].src)} → {fieldName(step.pairs[n].dst)}</td>
+                <td>{fieldName(step.pairs[n].src, $t)} → {fieldName(step.pairs[n].dst, $t)}</td>
                 <td class={p.ok ? 'ok' : 'bad'}>{p.ok ? '✓' : '✗'} {p.detail}</td>
               </tr>
             {/each}
@@ -180,35 +181,35 @@
 
       {#if result.ok && multi && !isLast}
         <div class="next">
-          <p><strong>Als Nächstes:</strong> {step.after || DEFAULT_AFTER}</p>
-          <button class="primary" on:click={() => goTo(stepIdx + 1)}>Weiter zu Schritt {stepIdx + 2} →</button>
-          <button on:click={() => goTo(stepIdx)}>Diesen Schritt wiederholen</button>
+          <p><strong>{$t('ui.detail.next')}</strong> {step.after || $t('ui.detail.defaultAfter')}</p>
+          <button class="primary" on:click={() => goTo(stepIdx + 1)}>{$t('ui.detail.toStep', { n: stepIdx + 2 })}</button>
+          <button on:click={() => goTo(stepIdx)}>{$t('ui.detail.repeatStep')}</button>
         </div>
       {:else if result.ok && multi && isLast}
         <div class="next">
-          <p class="ok"><strong>Alle {steps.length} Schritte erledigt.</strong></p>
-          <button on:click={() => goTo(0)}>Von vorn beginnen</button>
+          <p class="ok"><strong>{$t('ui.detail.allDone', { total: steps.length })}</strong></p>
+          <button on:click={() => goTo(0)}>{$t('ui.detail.restart')}</button>
         </div>
       {:else if result.ok}
-        <p><button on:click={() => goTo(stepIdx)}>Noch einmal ausführen</button></p>
+        <p><button on:click={() => goTo(stepIdx)}>{$t('ui.detail.again')}</button></p>
       {/if}
     </section>
   {:else if config.lastRun}
     <p class="muted small">
-      Zuletzt ausgeführt {ago(config.lastRun.at)}{config.lastRun.steps > 1 ? ` (Schritt ${config.lastRun.step + 1} von ${config.lastRun.steps})` : ''}:
-      <span class={config.lastRun.ok ? 'ok' : 'bad'}>{config.lastRun.ok ? 'erfolgreich' : 'mit Fehlern'}</span>.
+      {$t('ui.detail.lastRun', { ago: ago(config.lastRun.at, $lang), part: config.lastRun.steps > 1 ? ` (${$t('ui.detail.stepOf', { n: config.lastRun.step + 1, total: config.lastRun.steps })})` : '' })}
+      <span class={config.lastRun.ok ? 'ok' : 'bad'}>{$t(config.lastRun.ok ? 'ui.detail.lastOk' : 'ui.detail.lastBad')}</span>.
     </p>
   {/if}
 
   <details>
-    <summary>Zuordnung anzeigen</summary>
+    <summary>{$t('ui.detail.showMapping')}</summary>
     {#each steps as s, i}
-      {#if multi}<h3 class="sh">Schritt {i + 1}{s.title ? `: ${s.title}` : ''} <span class="muted small">{s.target.app} „{s.target.windowContains}“</span></h3>{/if}
+      {#if multi}<h3 class="sh">{$t('ui.detail.stepN', { n: i + 1 })}{s.title ? `: ${s.title}` : ''} <span class="muted small">{s.target.app} „{s.target.windowContains}“</span></h3>{/if}
       <table>
-        <thead><tr><th>Quellfeld</th><th>Zielfeld</th></tr></thead>
+        <thead><tr><th>{$t('ui.detail.sourceField')}</th><th>{$t('ui.detail.targetField')}</th></tr></thead>
         <tbody>
           {#each s.pairs as p}
-            <tr><td>{fieldName(p.src)}</td><td>{fieldName(p.dst)}</td></tr>
+            <tr><td>{fieldName(p.src, $t)}</td><td>{fieldName(p.dst, $t)}</td></tr>
           {/each}
         </tbody>
       </table>

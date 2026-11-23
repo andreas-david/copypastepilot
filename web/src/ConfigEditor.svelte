@@ -4,6 +4,7 @@
   import { createEventDispatcher } from 'svelte';
   import StepEditor from './StepEditor.svelte';
   import { api } from './api.js';
+  import { t } from './i18n.js';
 
   export let config = null; // null = neu
   export let agentOk = true;
@@ -32,7 +33,7 @@
   $: first = states[steps[0]?.key];
   $: if (!nameTouched && !name && first?.suggestedName) name = first.suggestedName;
 
-  $: firstProblem = steps.map((s, i) => ({ i, m: states[s.key]?.missing ?? 'wird geladen …' })).find((x) => x.m);
+  $: firstProblem = steps.map((s, i) => ({ i, m: states[s.key]?.missing ?? $t('ui.editor.loading') })).find((x) => x.m);
   $: allReady = steps.length > 0 && steps.every((s) => states[s.key] && states[s.key].ready && states[s.key].step);
   $: canSave = name.trim() !== '' && allReady && !saving;
 
@@ -70,15 +71,15 @@
 
 <div class="stack">
   <section class="card">
-    <h2>{config ? 'Konfiguration bearbeiten' : 'Neue Konfiguration'}</h2>
+    <h2>{config ? $t('ui.editor.titleEdit') : $t('ui.editor.titleNew')}</h2>
     <label class="field">
-      Name
-      <input bind:value={name} on:input={() => (nameTouched = true)} placeholder="z. B. Kunde aus Mail ins Formular" />
+      {$t('ui.editor.name')}
+      <input bind:value={name} on:input={() => (nameTouched = true)} placeholder={$t('ui.editor.namePlaceholder')} />
     </label>
     <label class="field">
-      Hilfe für den Nutzer
-      <textarea bind:value={help} rows="3" placeholder="z. B. Öffne in Chrome die Seite mit der Bestellung und in Firefox das Formular. Lege beide Fenster nebeneinander."></textarea>
-      <span class="muted small">Wird beim Ausführen angezeigt. Beschreibe, welche Seiten vorher geöffnet sein müssen.</span>
+      {$t('ui.editor.help')}
+      <textarea bind:value={help} rows="3" placeholder={$t('ui.editor.helpPlaceholder')}></textarea>
+      <span class="muted small">{$t('ui.editor.helpHint')}</span>
     </label>
   </section>
 
@@ -99,31 +100,28 @@
 
   <section class="card add">
     <div>
-      <strong>Muss das Ziel auf einer weiteren Seite befüllt werden?</strong>
-      <p class="muted small">
-        Zum Beispiel bei einem Formular mit „Weiter“. Klicke im Ziel selbst auf „Weiter“, damit die nächste Seite offen ist, und lege dann einen weiteren Schritt an.
-        Beim Ausführen siehst du nach jedem Schritt das Formular, klickst dort auf „Weiter“ und startest erst dann den nächsten Schritt im Tool.
-      </p>
+      <strong>{$t('ui.editor.moreTitle')}</strong>
+      <p class="muted small">{$t('ui.editor.moreText')}</p>
     </div>
-    <button on:click={addStep} disabled={steps.length >= MAX_STEPS}>＋ Weiteren Schritt hinzufügen</button>
+    <button on:click={addStep} disabled={steps.length >= MAX_STEPS}>{$t('ui.editor.addStep')}</button>
   </section>
 
   {#if error}<p class="bad" role="alert">{error}</p>{/if}
 
   <div class="bar">
     <button class:primary={!allReady} disabled={!anyToProbe || probing || anyTesting || !agentOk} on:click={probeAll}
-      title="Schreibt wirklich in die Zielfenster">
-      {probing ? 'Probelauf läuft …' : steps.filter((s) => states[s.key]?.canProbe).length > 1 ? 'Probelauf aller Schritte' : 'Probelauf starten'}
+      title={$t('ui.editor.probeTitle')}>
+      {probing ? $t('ui.editor.probing') : steps.filter((s) => states[s.key]?.canProbe).length > 1 ? $t('ui.editor.probeAll') : $t('ui.editor.probeStart')}
     </button>
-    <button class:primary={allReady} disabled={!canSave} on:click={save}>Speichern</button>
-    <button on:click={() => dispatch('cancel')}>Abbrechen</button>
+    <button class:primary={allReady} disabled={!canSave} on:click={save}>{$t('ui.editor.save')}</button>
+    <button on:click={() => dispatch('cancel')}>{$t('ui.cancel')}</button>
     <span class="status small">
       {#if !name.trim()}
-        <span class="muted">Gib der Konfiguration einen Namen.</span>
+        <span class="muted">{$t('ui.editor.needName')}</span>
       {:else if firstProblem}
-        <span class="muted">{steps.length > 1 ? `Schritt ${firstProblem.i + 1}: ` : ''}{firstProblem.m}</span>
+        <span class="muted">{steps.length > 1 ? `${$t('ui.detail.stepN', { n: firstProblem.i + 1 })}: ` : ''}{firstProblem.m}</span>
       {:else}
-        <span class="ok">Alles getestet – du kannst speichern.</span>
+        <span class="ok">{$t('ui.editor.allTested')}</span>
       {/if}
     </span>
   </div>

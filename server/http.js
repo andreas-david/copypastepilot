@@ -12,6 +12,8 @@ import { listApps, listWindows, assertWindow } from './windows.js';
 import { scanFields, copyFields } from './fields.js';
 import { checkStep, runStep } from './engine.js';
 import { INSTALL_SPEC } from './update.js';
+import { t, withLang } from './i18n.js';
+import { normalizeLang, parseAcceptLanguage } from '../locales/index.js';
 import {
   ValidationError,
   cleanPairs,
@@ -38,7 +40,7 @@ const TYPES = {
 /** Tab-Titel aus der Oberfläche: null oder kurzer Text. */
 function cleanTab(t) {
   if (t === undefined || t === null || t === '') return null;
-  if (typeof t !== 'string' || t.length > 300) throw new HttpError(400, 'tab ungültig');
+  if (typeof t !== 'string' || t.length > 300) throw new HttpError(400, t('http.badTab'));
   return t;
 }
 
@@ -80,18 +82,18 @@ export function createServer({ token, port, version, name, webDir, updates }) {
     let size = 0;
     for await (const c of req) {
       size += c.length;
-      if (size > 1_000_000) throw new HttpError(413, 'Anfrage zu groß');
+      if (size > 1_000_000) throw new HttpError(413, t('http.tooLarge'));
       chunks.push(c);
     }
     if (!size) return {};
     try {
       return JSON.parse(Buffer.concat(chunks).toString('utf8'));
     } catch {
-      throw new HttpError(400, 'Ungültiges JSON');
+      throw new HttpError(400, t('http.badJson'));
     }
   }
 
-  const needConfig = (id) => getConfig(id) || (() => { throw new HttpError(404, 'Konfiguration nicht gefunden'); })();
+  const needConfig = (id) => getConfig(id) || (() => { throw new HttpError(404, t('http.configNotFound')); })();
 
   function pruneProofs() {
     const now = Date.now();
@@ -109,14 +111,14 @@ export function createServer({ token, port, version, name, webDir, updates }) {
     input.steps.forEach((st, i) => {
       const h = stepHash(st);
       if (!known.has(h) && !proofs.has(h)) {
-        throw new HttpError(409, `Schritt ${i + 1}: Gespeichert werden kann erst nach einem erfolgreichen Probelauf mit genau dieser Zuordnung.`);
+        throw new HttpError(409, t('http.needProof', { n: i + 1 }));
       }
     });
   }
 
   function stepIndex(b, config) {
     const i = b.step === undefined ? 0 : b.step;
-    if (!Number.isInteger(i) || i < 0 || i >= config.steps.length) throw new HttpError(400, 'Ungültiger Schritt');
+    if (!Number.isInteger(i) || i < 0 || i >= config.steps.length) throw new HttpError(400, t('http.badStep'));
     return i;
   }
 
@@ -131,12 +133,12 @@ export function createServer({ token, port, version, name, webDir, updates }) {
     if (method === 'GET' && pathname === '/api/apps') return send(res, 200, { apps: await exclusive(listApps) });
     if (method === 'GET' && pathname === '/api/windows') {
       const app = url.searchParams.get('app') || '';
-      if (!app || app.length > 100) throw new HttpError(400, 'app fehlt');
+      if (!app || app.length > 100) throw new HttpError(400, t('http.appMissing'));
       return send(res, 200, { windows: await exclusive(() => listWindows(app)) });
     }
     if (method === 'POST' && pathname === '/api/scan') {
       const b = await readBody(req);
-      if (typeof b.app !== 'string' || !b.app || b.app.length > 100 || !/^w-\d+$/.test(String(b.windowId))) throw new HttpError(400, 'app oder windowId ungültig');
+      if (typeof b.app !== 'string' || !b.app || b.app.length > 100 || !/^w-\d+$/.test(String(b.windowId))) throw new HttpError(400, t('http.badScan'));
       const r = await exclusive(async () => {
         await assertWindow(b.app, b.windowId);
         return scanFields(b.app, b.windowId, !!b.includeEmpty, cleanTab(b.tab));
@@ -160,7 +162,7 @@ export function createServer({ token, port, version, name, webDir, updates }) {
       const errors = validateConfig(draft);
       if (errors.length) throw new ValidationError(errors);
       for (const side of ['source', 'target']) {
-        if (!/^w-\d+$/.test(String(b[side]?.windowId))) throw new HttpError(400, `${side}.windowId ungültig`);
+        if (!/^w-\d+$/.test(String(b[side]?.windowId))) throw new HttpError(400, t('http.badWindowId', { side }));
       }
       const result = await exclusive(async () => {
         await assertWindow(b.source.app, b.source.windowId);
@@ -198,13 +200,13 @@ export function createServer({ token, port, version, name, webDir, updates }) {
     if (method === 'POST' && (m = pathname.match(/^\/api\/configs\/([a-z0-9-]+)\/check$/))) {
       const c = needConfig(m[1]);
       const i = stepIndex(await readBody(req), c);
-      if ((await agent()) !== 'ok') return send(res, 200, { ready: false, items: [{ ok: false, label: 'agent-desktop nicht bereit', detail: 'Siehe Hinweis oben.' }] });
+      if ((await agent()) !== 'ok') return send(res, 200, { ready: false, items: [{ ok: false, label: t('http.agentNotReady'), detail: t('http.seeNotice') }] });
       return send(res, 200, await exclusive(() => checkStep(c.steps[i], { passive: true })));
     }
     if (method === 'POST' && (m = pathname.match(/^\/api\/configs\/([a-z0-9-]+)\/run$/))) {
       const c = needConfig(m[1]);
       const i = stepIndex(await readBody(req), c);
-      if ((await agent()) !== 'ok') throw new HttpError(409, 'agent-desktop ist nicht bereit');
+      if ((await agent()) !== 'ok') throw new HttpError(409, t('http.agentNotReadyShort'));
       const result = await exclusive(async () => {
         try {
           return await runStep(c.steps[i]);
@@ -215,36 +217,39 @@ export function createServer({ token, port, version, name, webDir, updates }) {
       if (result.pairs.length) setLastRun(c.id, i, result);
       return send(res, 200, result);
     }
-    throw new HttpError(404, 'Nicht gefunden');
+    throw new HttpError(404, t('http.notFound'));
   }
 
   function serveStatic(res, pathname) {
     const rel = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
     const file = path.resolve(webDir, rel);
     if (!file.startsWith(path.resolve(webDir) + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
-      if (!fs.existsSync(path.join(webDir, 'index.html'))) return send(res, 500, 'Oberfläche nicht gebaut (npm run build).', 'text/plain; charset=utf-8');
-      return send(res, 404, 'Nicht gefunden', 'text/plain; charset=utf-8');
+      if (!fs.existsSync(path.join(webDir, 'index.html'))) return send(res, 500, t('http.uiNotBuilt'), 'text/plain; charset=utf-8');
+      return send(res, 404, t('http.notFound'), 'text/plain; charset=utf-8');
     }
     return send(res, 200, fs.readFileSync(file), TYPES[path.extname(file)] || 'application/octet-stream');
   }
 
-  return http.createServer(async (req, res) => {
-    try {
-      if (!hosts.has(req.headers.host || '')) throw new HttpError(403, 'Host nicht erlaubt');
-      const url = new URL(req.url, `http://${req.headers.host}`);
-      if (url.pathname.startsWith('/api/')) {
-        if (req.headers.origin && !origins.has(req.headers.origin)) throw new HttpError(403, 'Origin nicht erlaubt');
-        if (!tokenOk(req.headers['x-token'])) throw new HttpError(401, 'Token fehlt oder falsch');
-        return await api(req, res, url);
+  return http.createServer((req, res) => {
+    const lang = normalizeLang(req.headers['x-lang']) || parseAcceptLanguage(req.headers['accept-language']);
+    return withLang(lang, async () => {
+      try {
+        if (!hosts.has(req.headers.host || '')) throw new HttpError(403, t('http.hostDenied'));
+        const url = new URL(req.url, `http://${req.headers.host}`);
+        if (url.pathname.startsWith('/api/')) {
+          if (req.headers.origin && !origins.has(req.headers.origin)) throw new HttpError(403, t('http.originDenied'));
+          if (!tokenOk(req.headers['x-token'])) throw new HttpError(401, t('http.tokenBad'));
+          return await api(req, res, url);
+        }
+        if (req.method !== 'GET') throw new HttpError(405, t('http.methodDenied'));
+        return serveStatic(res, decodeURIComponent(url.pathname));
+      } catch (e) {
+        if (e instanceof HttpError) return send(res, e.status, { error: e.message, ...(e.extra || {}) });
+        if (e instanceof ValidationError) return send(res, 422, { error: e.message, details: e.details });
+        if (e instanceof AgentError) return send(res, 502, { error: e.message });
+        console.error(e);
+        return send(res, 500, { error: t('http.internal') });
       }
-      if (req.method !== 'GET') throw new HttpError(405, 'Methode nicht erlaubt');
-      return serveStatic(res, decodeURIComponent(url.pathname));
-    } catch (e) {
-      if (e instanceof HttpError) return send(res, e.status, { error: e.message, ...(e.extra || {}) });
-      if (e instanceof ValidationError) return send(res, 422, { error: e.message, details: e.details });
-      if (e instanceof AgentError) return send(res, 502, { error: e.message });
-      console.error(e);
-      return send(res, 500, { error: 'Interner Fehler' });
-    }
+    });
   });
 }

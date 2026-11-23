@@ -1,4 +1,5 @@
 import { ad, AgentError } from './agent.js';
+import { t } from './i18n.js';
 
 const area = (w) => (w.bounds?.width || 0) * (w.bounds?.height || 0);
 
@@ -54,7 +55,7 @@ export async function tabsOf(app, wid) {
 export async function selectTab(app, wid, title) {
   const tabs = await tabsOf(app, wid);
   const want = tabs.find((t) => t.title === title);
-  if (!want) throw new AgentError(`Tab „${title}“ nicht gefunden (wurde er geschlossen?)`);
+  if (!want) throw new AgentError(t('win.tabNotFound', { title }));
   if (want.selected) return null;
   const prev = tabs.find((t) => t.selected);
   await ad(['click', want.ref]);
@@ -95,7 +96,7 @@ export async function listWindows(app) {
 /** Prüft, dass ein Fenster zur gewählten App gehört. */
 export async function assertWindow(app, id) {
   const wins = (await ad(['list-windows', '--app', app, '--timeout-ms', 10000], 30000)) || [];
-  if (!wins.some((w) => w.id === id)) throw new AgentError(`Fenster ${id} gehört nicht zu ${app}`);
+  if (!wins.some((w) => w.id === id)) throw new AgentError(t('win.notInApp', { id, app }));
 }
 
 /**
@@ -109,7 +110,7 @@ export async function findWindow(app, contains) {
   const hits = all.filter((w) => w.title.toLowerCase().includes(needle));
   if (hits.length) {
     const titles = [...new Set(hits.map((w) => w.title))];
-    if (titles.length > 1) return { ok: false, reason: `mehrdeutig: ${titles.length} Fenster passen zu „${contains}“` };
+    if (titles.length > 1) return { ok: false, reason: t('win.ambiguousWindows', { count: titles.length, contains }) };
     const best = hits.reduce((a, b) => (area(b) > area(a) ? b : a));
     return { ok: true, id: best.id, title: best.title, tab: null };
   }
@@ -122,10 +123,9 @@ export async function findWindow(app, contains) {
     }
   }
   const tabTitles = [...new Set(tabHits.map((t) => t.title))];
-  if (tabTitles.length > 1) return { ok: false, reason: `mehrdeutig: ${tabTitles.length} Tabs passen zu „${contains}“` };
+  if (tabTitles.length > 1) return { ok: false, reason: t('win.ambiguousTabs', { count: tabTitles.length, contains }) };
   if (tabHits.length) return { ok: true, id: tabHits[0].id, title: tabHits[0].title, tab: tabHits[0].title };
-  const list = open.size
-    ? ` Offen (Fenster und Tabs): ${[...open].slice(0, 8).map((t) => `„${t.length > 40 ? t.slice(0, 40) + '…' : t}“`).join(', ')}.`
-    : ` ${app} hat keine offenen Fenster.`;
-  return { ok: false, reason: `weder Fenster noch Tab in ${app}, dessen Titel „${contains}“ enthält.${list}` };
+  const shown = [...open].slice(0, 8).map((x) => t('field.quoted', { text: x.length > 40 ? x.slice(0, 40) + '…' : x }));
+  const list = open.size ? ` ${t('win.openList', { list: shown.join(', ') })}` : ` ${t('win.noWindows', { app })}`;
+  return { ok: false, reason: t('win.noMatch', { app, contains, list }) };
 }

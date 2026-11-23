@@ -4,6 +4,7 @@
   import { createEventDispatcher } from 'svelte';
   import FieldPicker from './FieldPicker.svelte';
   import { api } from './api.js';
+  import { t } from './i18n.js';
 
   export let index = 0;
   export let hasNext = false; // folgt nach diesem Schritt noch einer?
@@ -29,8 +30,8 @@
   let result = null;
   let testedSignature = '';
   let error = '';
-  let srcHint = 'Programm wählen';
-  let tgtHint = 'Programm wählen';
+  let srcHint = '';
+  let tgtHint = '';
   let showTexts = true;
   let onlyMapped = false;
   let query = '';
@@ -61,10 +62,10 @@
   const key = (f) => `${f.role}|${f.label}|${f.occurrence}`;
   const norm = (s) => s.toLowerCase().replace(/[^a-z0-9äöüß]/g, '');
   const short = (v, n = 40) => ((v || '').length > n ? `${v.slice(0, n)}…` : v || '');
-  const label = (f) =>
+  $: label = (f) =>
     f.role === 'statictext'
-      ? `Text „${short(f.value)}“`
-      : `${f.label || '(ohne Beschriftung)'}${f.occurrence > 0 ? ` #${f.occurrence + 1}` : ''}`;
+      ? $t('ui.step.textLabel', { value: short(f.value) })
+      : `${f.label || $t('field.noLabel')}${f.occurrence > 0 ? ` #${f.occurrence + 1}` : ''}`;
 
   // Vorschlag nach Beschriftung: erst gleich, dann enthält/ist enthalten (mind. 3 Zeichen). Der Nutzer korrigiert.
   function suggest(sf, targets, used) {
@@ -144,12 +145,12 @@
 
   // Was fehlt diesem Schritt noch? (für die Leiste im Editor)
   $: missing = !redo ? ''
-    : !sourceSel ? `Quelle: ${srcHint || 'wählen'}`
-    : !targetSel ? `Ziel: ${tgtHint || 'wählen'}`
-    : !loaded ? '„Felder laden“ klicken'
-    : !pairs.length ? 'mindestens ein Quellfeld einem Zielfeld zuordnen'
-    : stale ? 'Zuordnung geändert – bitte neu testen'
-    : !tested ? (result && !result.ok ? 'Probelauf hat nicht alles kopiert' : 'Probelauf starten') : '';
+    : !sourceSel ? $t('ui.step.missSource', { hint: srcHint || $t('ui.step.choose') })
+    : !targetSel ? $t('ui.step.missTarget', { hint: tgtHint || $t('ui.step.choose') })
+    : !loaded ? $t('ui.step.missLoad')
+    : !pairs.length ? $t('ui.step.missPair')
+    : stale ? $t('ui.step.missStale')
+    : !tested ? (result && !result.ok ? $t('ui.step.missProbeFailed') : $t('ui.step.missProbe')) : '';
 
   $: dispatch('update', {
     title,
@@ -169,37 +170,37 @@
 
 <section class="step">
   <header>
-    <h2><span class="chip">Schritt {index + 1}</span></h2>
-    <input class="title" bind:value={title} placeholder="Bezeichnung (optional), z. B. Seite 1: Kundendaten" aria-label="Bezeichnung des Schritts" />
-    {#if removable}<button class="danger" on:click={() => dispatch('remove')}>Schritt entfernen</button>{/if}
+    <h2><span class="chip">{$t('ui.detail.stepN', { n: index + 1 })}</span></h2>
+    <input class="title" bind:value={title} placeholder={$t('ui.step.titlePlaceholder')} aria-label={$t('ui.step.titleAria')} />
+    {#if removable}<button class="danger" on:click={() => dispatch('remove')}>{$t('ui.step.remove')}</button>{/if}
   </header>
 
   {#if hasNext}
     <label class="field">
-      Hinweis nach diesem Schritt
-      <input bind:value={after} placeholder="z. B. Prüfe die Angaben und klicke im Formular auf „Weiter“." />
-      <span class="muted small">Wird beim Ausführen angezeigt, bevor der nächste Schritt startet.</span>
+      {$t('ui.step.after')}
+      <input bind:value={after} placeholder={$t('ui.step.afterPlaceholder')} />
+      <span class="muted small">{$t('ui.step.afterHint')}</span>
     </label>
   {/if}
 
   {#if !redo}
     <section class="card">
-      <h3>Zuordnung</h3>
-      <p>{existing.source.app} „{existing.source.windowContains}“ → {existing.target.app} „{existing.target.windowContains}“, {existing.pairs.length} Felder.</p>
-      <button on:click={() => (redo = true)}>Ziel, Quelle und Zuordnung neu festlegen</button>
+      <h3>{$t('ui.step.mapping')}</h3>
+      <p>{$t('ui.step.summary', { sourceApp: existing.source.app, sourceWin: existing.source.windowContains, targetApp: existing.target.app, targetWin: existing.target.windowContains, count: existing.pairs.length })}</p>
+      <button on:click={() => (redo = true)}>{$t('ui.step.redo')}</button>
     </section>
   {:else}
     <div class="cols">
-      <FieldPicker title="Quelle – von hier kopieren" side="source" {agentOk} preset={presetSource} on:change={(e) => (sourceSel = e.detail)} on:hint={(e) => (srcHint = e.detail)} />
-      <FieldPicker title="Ziel – hier hinein" side="target" {agentOk} preset={presetTarget} on:change={(e) => (targetSel = e.detail)} on:hint={(e) => (tgtHint = e.detail)} />
+      <FieldPicker title={$t('ui.step.sourceTitle')} side="source" {agentOk} preset={presetSource} on:change={(e) => (sourceSel = e.detail)} on:hint={(e) => (srcHint = e.detail)} />
+      <FieldPicker title={$t('ui.step.targetTitle')} side="target" {agentOk} preset={presetTarget} on:change={(e) => (targetSel = e.detail)} on:hint={(e) => (tgtHint = e.detail)} />
     </div>
 
     <div class="loadbar">
       <button class="primary" on:click={loadFields} disabled={!sourceSel || !targetSel || loading || !agentOk}>
-        {loading ? 'Lese Felder … (bei großen Seiten einige Sekunden)' : loaded ? 'Felder neu laden' : 'Felder laden'}
+        {loading ? $t('ui.step.loading') : loaded ? $t('ui.step.reload') : $t('ui.step.load')}
       </button>
       <span class="muted small">
-        {#if !sourceSel || !targetSel}Wähle zuerst Quelle und Ziel.{:else if !loaded}Liest die Felder aus beiden Fenstern. Es wird nichts verändert.{:else}Gelesen. Unten kannst du zuordnen.{/if}
+        {#if !sourceSel || !targetSel}{$t('ui.step.loadHintChoose')}{:else if !loaded}{$t('ui.step.loadHintInfo')}{:else}{$t('ui.step.loadHintDone')}{/if}
       </span>
     </div>
     {#if loadError}<p class="bad" role="alert">{loadError}</p>{/if}
@@ -207,41 +208,39 @@
     {#if loaded}
       <div class="cols map">
         <section class="card">
-          <h3>Zuordnung</h3>
-          <p class="muted small">
-            Wähle bei jedem Quellfeld, in welches Zielfeld es kopiert werden soll. Vorschläge kommen aus den Beschriftungen – bitte prüfen.
-          </p>
+          <h3>{$t('ui.step.mapping')}</h3>
+          <p class="muted small">{$t('ui.step.mapHelp')}</p>
           <p class="probe small" role="status">
-            {#if testing}<span class="muted">Probelauf läuft …</span>
-            {:else if tested}<span class="ok">Probelauf: alle {result.pairs.length} Felder kopiert und zurückgelesen.</span>
-            {:else if result && !stale && !result.ok}<span class="bad">Nicht alles hat geklappt (siehe Zeilen unten).</span>
-            {:else if stale}<span class="muted">Zuordnung geändert – bitte unten neu testen.</span>
-            {:else}<span class="muted">{pairs.length} Felder zugeordnet. Den Probelauf startest du unten neben „Speichern“. Er schreibt wirklich ins Zielfenster – am besten eine Testseite ohne echte Daten.</span>{/if}
+            {#if testing}<span class="muted">{$t('ui.step.probeRunning')}</span>
+            {:else if tested}<span class="ok">{$t('ui.step.probeOk', { count: result.pairs.length })}</span>
+            {:else if result && !stale && !result.ok}<span class="bad">{$t('ui.step.probeFailed')}</span>
+            {:else if stale}<span class="muted">{$t('ui.step.probeStale')}</span>
+            {:else}<span class="muted">{$t('ui.step.probeIdle', { count: pairs.length })}</span>{/if}
           </p>
           {#if error}<p class="bad" role="alert">{error}</p>{/if}
           <div class="filters">
-            <input class="search" type="search" placeholder="Suchen …" bind:value={query} aria-label="Felder durchsuchen" />
-            <label class="inline"><input type="checkbox" bind:checked={showTexts} /> normaler Text</label>
-            <label class="inline"><input type="checkbox" bind:checked={onlyMapped} /> nur zugeordnete</label>
+            <input class="search" type="search" placeholder={$t('ui.step.search')} bind:value={query} aria-label={$t('ui.step.searchAria')} />
+            <label class="inline"><input type="checkbox" bind:checked={showTexts} /> {$t('ui.step.showTexts')}</label>
+            <label class="inline"><input type="checkbox" bind:checked={onlyMapped} /> {$t('ui.step.onlyMapped')}</label>
           </div>
           <div class="scroll">
             <table>
-              <thead><tr><th>Quelle</th><th>Inhalt</th><th>→ Zielfeld</th></tr></thead>
+              <thead><tr><th>{$t('side.source')}</th><th>{$t('ui.step.thContent')}</th><th>{$t('ui.step.thTarget')}</th></tr></thead>
               <tbody>
                 {#each shownRows as f (key(f))}
                   {@const k = key(f)}
                   {@const idx = pairIndex(f)}
                   <tr class:mapped={!!mapping[k]}>
-                    <td>{#if f.kind === 'text'}<span class="tag">Text</span>{:else}{label(f)}{/if}</td>
+                    <td>{#if f.kind === 'text'}<span class="tag">{$t('ui.step.tagText')}</span>{:else}{label(f)}{/if}</td>
                     <td class="value">{f.secure ? f.value : short(f.value, 80)}</td>
                     <td>
                       {#if f.secure}
-                        <span class="muted small">wird nie gelesen</span>
+                        <span class="muted small">{$t('ui.step.neverRead')}</span>
                       {:else}
-                        <select bind:value={mapping[k]} aria-label={`Zielfeld für ${label(f)}`}>
-                          <option value="">– nicht kopieren –</option>
-                          {#each targetFields as t}
-                            <option value={key(t)} disabled={usedTargets.has(key(t)) && mapping[k] !== key(t)}>{label(t)}</option>
+                        <select bind:value={mapping[k]} aria-label={$t('ui.step.targetFor', { name: label(f) })}>
+                          <option value="">{$t('ui.step.dontCopy')}</option>
+                          {#each targetFields as tf}
+                            <option value={key(tf)} disabled={usedTargets.has(key(tf)) && mapping[k] !== key(tf)}>{label(tf)}</option>
                           {/each}
                         </select>
                         {#if result && !stale && idx >= 0}
@@ -257,15 +256,15 @@
         </section>
 
         <section class="card">
-          <h3>Zielfelder</h3>
-          <p class="muted small">{openTargets ? `${openTargets} noch ohne Quelle.` : 'Alle haben eine Quelle.'}</p>
+          <h3>{$t('ui.step.targetFields')}</h3>
+          <p class="muted small">{openTargets ? $t('ui.step.openCount', { count: openTargets }) : $t('ui.step.allHaveSource')}</p>
           <ul class="targets">
-            {#each targetFields as t (key(t))}
-              {@const a = assignedTo(t)}
+            {#each targetFields as tf (key(tf))}
+              {@const a = assignedTo(tf)}
               <li class:open={!a}>
-                <div class="tname">{label(t)}</div>
-                <div class="tnow muted small">{t.value ? `jetzt: ${short(t.value, 30)}` : 'leer'}</div>
-                <div class="tsrc">{#if a}<span class="ok">←</span> {label(a)}{:else}<span class="muted">– offen –</span>{/if}</div>
+                <div class="tname">{label(tf)}</div>
+                <div class="tnow muted small">{tf.value ? $t('ui.step.nowValue', { value: short(tf.value, 30) }) : $t('ui.step.empty')}</div>
+                <div class="tsrc">{#if a}<span class="ok">←</span> {label(a)}{:else}<span class="muted">{$t('ui.step.open')}</span>{/if}</div>
               </li>
             {/each}
           </ul>

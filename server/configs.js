@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { INPUT_ROLES } from './fields.js';
+import { t } from './i18n.js';
 
 export const homeDir = () => process.env.COPYPASTEPILOT_HOME || path.join(os.homedir(), '.copypastepilot');
 // Frühere Namen des Programms (neuester zuerst).
@@ -30,7 +31,7 @@ export const MAX_STEPS = 10;
 
 export class ValidationError extends Error {
   constructor(details) {
-    super('Konfiguration ungültig');
+    super(t('cfg.invalid'));
     this.details = details;
   }
 }
@@ -59,15 +60,15 @@ export function normalize(c) {
 
 function validateStep(s, label) {
   const errors = [];
-  if (!s || typeof s !== 'object') return [`${label}: fehlt`];
-  if (s.title !== undefined && !isStr(s.title, 100)) errors.push(`${label}: Titel ist zu lang (höchstens 100 Zeichen)`);
-  if (s.after !== undefined && !isStr(s.after, 500)) errors.push(`${label}: Hinweis ist zu lang (höchstens 500 Zeichen)`);
-  if (!validSide(s.source)) errors.push(`${label}: Quelle braucht Programm und Fenstertitel`);
-  if (!validSide(s.target)) errors.push(`${label}: Ziel braucht Programm und Fenstertitel`);
-  if (!Array.isArray(s.pairs) || !s.pairs.length || s.pairs.length > 100) errors.push(`${label}: es braucht 1 bis 100 Feldpaare`);
+  if (!s || typeof s !== 'object') return [t('v.missing', { label })];
+  if (s.title !== undefined && !isStr(s.title, 100)) errors.push(t('v.titleTooLong', { label, max: 100 }));
+  if (s.after !== undefined && !isStr(s.after, 500)) errors.push(t('v.afterTooLong', { label, max: 500 }));
+  if (!validSide(s.source)) errors.push(t('v.sourceNeeds', { label }));
+  if (!validSide(s.target)) errors.push(t('v.targetNeeds', { label }));
+  if (!Array.isArray(s.pairs) || !s.pairs.length || s.pairs.length > 100) errors.push(t('v.pairsCount', { label, max: 100 }));
   else
     s.pairs.forEach((p, i) => {
-      if (!validField(p?.src, SOURCE_ROLES) || !validField(p?.dst, INPUT_ROLES)) errors.push(`${label}: Feldpaar ${i + 1} ist ungültig`);
+      if (!validField(p?.src, SOURCE_ROLES) || !validField(p?.dst, INPUT_ROLES)) errors.push(t('v.pairInvalid', { label, n: i + 1 }));
     });
   return errors;
 }
@@ -75,11 +76,11 @@ function validateStep(s, label) {
 export function validateConfig(input) {
   const c = normalize(input);
   const errors = [];
-  if (!c || typeof c !== 'object') return ['Konfiguration fehlt'];
-  if (!isStr(c.name, 100) || !c.name.trim()) errors.push('Name fehlt oder ist zu lang (höchstens 100 Zeichen)');
-  if (c.help !== undefined && !isStr(c.help, 5000)) errors.push('Hilfetext ist zu lang (höchstens 5000 Zeichen)');
-  if (!Array.isArray(c.steps) || !c.steps.length || c.steps.length > MAX_STEPS) errors.push(`Es braucht 1 bis ${MAX_STEPS} Schritte`);
-  else c.steps.forEach((s, i) => errors.push(...validateStep(s, `Schritt ${i + 1}`)));
+  if (!c || typeof c !== 'object') return [t('v.configMissing')];
+  if (!isStr(c.name, 100) || !c.name.trim()) errors.push(t('v.nameInvalid', { max: 100 }));
+  if (c.help !== undefined && !isStr(c.help, 5000)) errors.push(t('v.helpTooLong', { max: 5000 }));
+  if (!Array.isArray(c.steps) || !c.steps.length || c.steps.length > MAX_STEPS) errors.push(t('v.stepsCount', { max: MAX_STEPS }));
+  else c.steps.forEach((s, i) => errors.push(...validateStep(s, t('v.step', { n: i + 1 }))));
   return errors;
 }
 
@@ -170,7 +171,7 @@ export function setLastRun(id, stepIndex, result) {
     ok: result.ok,
     step: stepIndex,
     steps: c.steps.length,
-    pairs: result.pairs.map((p) => ({ ok: p.ok, detail: p.detail })),
+    pairs: result.pairs.map((p) => ({ ok: p.ok })), // ohne Meldungstext, damit nichts in einer Sprache gespeichert wird
   };
   writeAtomic(path.join(configDir(), `${id}.json`), c);
 }

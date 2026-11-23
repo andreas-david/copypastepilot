@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { api, hasToken, ago } from './api.js';
   import { getTheme, setTheme } from './theme.js';
+  import { t, lang, setLang, LANGS } from './i18n.js';
   import ConfigDetail from './ConfigDetail.svelte';
   import ConfigEditor from './ConfigEditor.svelte';
 
@@ -13,7 +14,8 @@
   let timer = null;
   let dismissed = '';
   let theme = getTheme();
-  const themes = [['auto', 'Automatisch'], ['light', 'Hell'], ['dark', 'Dunkel']];
+  const themes = ['auto', 'light', 'dark'];
+  const langNames = { de: 'Deutsch', en: 'English' };
   const chooseTheme = (t) => { theme = t; setTheme(t); };
 
   try { dismissed = localStorage.getItem('ec-dismissed-update') || ''; } catch { /* egal */ }
@@ -63,55 +65,57 @@
 {#if !hasToken}
   <main class="narrow">
     <div class="card">
-      <h1>Bitte die Adresse aus dem Terminal öffnen</h1>
-      <p>Aus Sicherheitsgründen funktioniert die Seite nur mit der Adresse, die beim Start im Terminal angezeigt wird (sie enthält ein Zugangs-Token).</p>
+      <h1>{$t('ui.token.title')}</h1>
+      <p>{$t('ui.token.text')}</p>
     </div>
   </main>
 {:else}
   <div class="shell">
     <header>
       <h1>CopyPastePilot</h1>
-      {#if status}<span class="muted small">Version {status.version}</span>{/if}
-      <div class="theme" role="group" aria-label="Darstellung">
-        {#each themes as [value, text]}
-          <button class:active={theme === value} aria-pressed={theme === value} on:click={() => chooseTheme(value)}>{text}</button>
-        {/each}
+      {#if status}<span class="muted small">{$t('ui.version', { version: status.version })}</span>{/if}
+      <div class="switches">
+        <div class="seg" role="group" aria-label={$t('ui.lang.label')}>
+          {#each LANGS as l}
+            <button class:active={$lang === l} aria-pressed={$lang === l} on:click={() => setLang(l)} lang={l}>{langNames[l]}</button>
+          {/each}
+        </div>
+        <div class="seg" role="group" aria-label={$t('ui.theme.label')}>
+          {#each themes as value}
+            <button class:active={theme === value} aria-pressed={theme === value} on:click={() => chooseTheme(value)}>{$t(`ui.theme.${value}`)}</button>
+          {/each}
+        </div>
       </div>
     </header>
 
     {#if showUpdate}
       <div class="banner info" role="status">
         <div>
-          <strong>Neue Version {update.latest} verfügbar</strong> (installiert: {update.current}).
-          Aktualisieren mit <code>{update.command}</code>, danach das Programm im Terminal neu starten.
+          <strong>{$t('ui.update.available', { latest: update.latest })}</strong> {$t('ui.update.installed', { current: update.current })}
+          {$t('ui.update.how')} <code>{update.command}</code>{$t('ui.update.restart')}
         </div>
-        <button class="link" on:click={dismissUpdate}>Ausblenden</button>
+        <button class="link" on:click={dismissUpdate}>{$t('ui.update.dismiss')}</button>
       </div>
     {/if}
 
     {#if status?.agent === 'missing'}
       <div class="banner warn" role="alert">
         <div>
-          <strong>agent-desktop wurde nicht gefunden.</strong> Ohne dieses Programm lassen sich keine Fenster lesen.
-          Installiere das Paket neu mit <code>npm install -g {status.install}</code>.
+          <strong>{$t('ui.agentMissing.title')}</strong> {$t('ui.agentMissing.text')}
+          <code>npm install -g {status.install}</code>
         </div>
       </div>
     {:else if status?.agent === 'no_screen_recording'}
       <div class="banner warn" role="alert">
         <div>
-          <strong>Die Freigabe „Bildschirmaufnahme“ fehlt.</strong> Ohne sie gibt macOS keine Fenstertitel heraus, und Fenster
-          lassen sich nicht erkennen (du siehst dann nur den Programmnamen). Es wird nichts aufgenommen. Öffne Systemeinstellungen →
-          Datenschutz &amp; Sicherheit → Bildschirm- &amp; Systemaudioaufnahme und schalte das Programm ein, aus dem du den
-          CopyPastePilot gestartet hast. Danach dieses Programm und CopyPastePilot neu starten.
-          Hilfe im Terminal: <code>npx agent-desktop permissions --guide</code>
+          <strong>{$t('ui.noScreen.title')}</strong> {$t('ui.noScreen.text')}
+          {$t('ui.noScreen.help')} <code>npx agent-desktop permissions --guide</code>
         </div>
       </div>
     {:else if status?.agent === 'no_permission'}
       <div class="banner warn" role="alert">
         <div>
-          <strong>Die Freigabe für Bedienungshilfen fehlt.</strong> Öffne Systemeinstellungen → Datenschutz &amp; Sicherheit →
-          Bedienungshilfen und schalte dort das Programm ein, aus dem du CopyPastePilot gestartet hast (meist das Terminal).
-          Danach erkennt die Seite es automatisch.
+          <strong>{$t('ui.noPermission.title')}</strong> {$t('ui.noPermission.text')}
         </div>
       </div>
     {/if}
@@ -119,22 +123,22 @@
     {#if error}<p class="bad" role="alert">{error}</p>{/if}
 
     <div class="layout">
-      <nav aria-label="Konfigurationen">
-        <h2>Konfigurationen</h2>
+      <nav aria-label={$t('ui.configs')}>
+        <h2>{$t('ui.configs')}</h2>
         <ul>
           {#each configs as c (c.id)}
             <li>
               <button class="item" class:selected={c.id === selectedId && mode !== 'new'} on:click={() => pick(c.id)}>
                 <span class="name">{c.name}</span>
-                <span class="route muted small">{c.steps[0].source.windowContains} → {c.steps[0].target.windowContains}{c.steps.length > 1 ? ` · ${c.steps.length} Schritte` : ''}</span>
+                <span class="route muted small">{c.steps[0].source.windowContains} → {c.steps[0].target.windowContains}{c.steps.length > 1 ? ` · ${$t('ui.stepCount', { count: c.steps.length })}` : ''}</span>
                 <span class="last small" class:ok={c.lastRun?.ok} class:bad={c.lastRun && !c.lastRun.ok}>
-                  {#if c.lastRun}{c.lastRun.ok ? '✓' : '✗'} zuletzt {ago(c.lastRun.at)}{:else}<span class="muted">noch nie ausgeführt</span>{/if}
+                  {#if c.lastRun}{c.lastRun.ok ? '✓' : '✗'} {$t('ui.lastRunAgo', { ago: ago(c.lastRun.at, $lang) })}{:else}<span class="muted">{$t('ui.neverRun')}</span>{/if}
                 </span>
               </button>
             </li>
           {/each}
         </ul>
-        <button class="newbtn" on:click={() => { mode = 'new'; }} class:selected={mode === 'new'}>＋ Neue Konfiguration</button>
+        <button class="newbtn" on:click={() => { mode = 'new'; }} class:selected={mode === 'new'}>{$t('ui.newConfig')}</button>
       </nav>
 
       <section class="content">
@@ -146,19 +150,19 @@
           <ConfigDetail config={selected} on:edit={() => (mode = 'edit')} on:ran={loadConfigs} on:removed={removed} />
         {:else}
           <div class="card empty">
-            <h2>Noch keine Konfiguration</h2>
-            <p class="muted">Eine Konfiguration beschreibt, welche Felder aus welchem Fenster in welches andere Fenster kopiert werden.</p>
-            <button class="primary big" on:click={() => (mode = 'new')}>Erste Konfiguration anlegen</button>
+            <h2>{$t('ui.empty.title')}</h2>
+            <p class="muted">{$t('ui.empty.text')}</p>
+            <button class="primary big" on:click={() => (mode = 'new')}>{$t('ui.empty.button')}</button>
           </div>
         {/if}
       </section>
     </div>
 
     <footer>
-      Hilfe oder Fehler melden?
+      {$t('ui.footer.help')}
       <a href="https://www.digitaldavid.de/copypastepilot" target="_blank" rel="noopener noreferrer">www.digitaldavid.de/copypastepilot</a>
       ·
-      <a href="https://github.com/andreas-david/copypastepilot/issues" target="_blank" rel="noopener noreferrer">Fehler auf GitHub melden</a>
+      <a href="https://github.com/andreas-david/copypastepilot/issues" target="_blank" rel="noopener noreferrer">{$t('ui.footer.issues')}</a>
     </footer>
   </div>
 {/if}
@@ -170,10 +174,11 @@
   .narrow { max-width: 560px; margin: 4rem auto; padding: 0 1rem; }
   header { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 1rem; }
   header h1 { margin: 0; }
-  .theme { margin-left: auto; display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-  .theme button { border: 0; border-radius: 0; padding: 0.3rem 0.7rem; font-size: 0.875rem; background: var(--panel); }
-  .theme button + button { border-left: 1px solid var(--line); }
-  .theme button.active { background: var(--accent); color: var(--accent-text); }
+  .switches { margin-left: auto; display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: flex-end; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; padding: 0.3rem 0.7rem; font-size: 0.875rem; background: var(--panel); }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button.active { background: var(--accent); color: var(--accent-text); }
   .layout { display: grid; grid-template-columns: 290px 1fr; gap: 1.25rem; align-items: start; }
   @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } }
   nav ul { list-style: none; margin: 0 0 0.75rem; padding: 0; display: grid; gap: 0.4rem; }

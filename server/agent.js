@@ -3,6 +3,7 @@ import { execFile } from 'node:child_process';
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
+import { t } from './i18n.js';
 
 export class AgentError extends Error {
   constructor(message, code = 'FEHLER') {
@@ -76,9 +77,9 @@ export function ad(args, timeoutMs = 60000) {
           /* kein JSON */
         }
         if (!res) {
-          if (err && err.code === 'ENOENT') return reject(new AgentError('agent-desktop nicht gefunden', 'MISSING'));
-          if (err && err.killed) return reject(new AgentError('agent-desktop Zeitüberschreitung', 'TIMEOUT'));
-          return reject(new AgentError('agent-desktop lieferte keine Antwort', 'NO_JSON'));
+          if (err && err.code === 'ENOENT') return reject(new AgentError(t('agent.missing'), 'MISSING'));
+          if (err && err.killed) return reject(new AgentError(t('agent.timeout'), 'TIMEOUT'));
+          return reject(new AgentError(t('agent.noResponse'), 'NO_JSON'));
         }
         if (!res.ok) {
           const e = res.error || {};

@@ -7,7 +7,12 @@ import { spawn } from 'node:child_process';
 
 const major = Number(process.versions.node.split('.')[0]);
 if (major < 18) {
-  console.error(`Node.js 18 oder neuer wird gebraucht (gefunden: ${process.versions.node}). Bitte von https://nodejs.org installieren.`);
+  const de = /^de/i.test(process.env.LC_ALL || process.env.LANG || Intl.DateTimeFormat().resolvedOptions().locale || '');
+  console.error(
+    de
+      ? `Node.js 18 oder neuer wird gebraucht (gefunden: ${process.versions.node}). Bitte von https://nodejs.org installieren.`
+      : `Node.js 18 or newer is required (found: ${process.versions.node}). Please install it from https://nodejs.org.`,
+  );
   process.exit(1);
 }
 
@@ -15,20 +20,19 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const args = process.argv.slice(2);
 
+// Sprache der Terminal-Ausgabe: --lang, sonst Umgebung (COPYPASTEPILOT_LANG, LC_ALL, LANG), sonst Systemsprache, sonst Englisch.
+const { setDefaultLang, langFromEnv, t } = await import('../server/i18n.js');
+const { normalizeLang } = await import('../locales/index.js');
+const langArg = args.indexOf('--lang');
+setDefaultLang(
+  (langArg >= 0 && normalizeLang(args[langArg + 1])) || langFromEnv() || normalizeLang(Intl.DateTimeFormat().resolvedOptions().locale),
+);
+
+const SITE = 'https://www.digitaldavid.de/copypastepilot';
+const ISSUES = 'https://github.com/andreas-david/copypastepilot/issues';
+
 if (args.includes('--help') || args.includes('-h')) {
-  console.log(`${pkg.name} ${pkg.version}
-
-Kopiert Felder von einem Programmfenster in ein anderes. Läuft nur auf diesem Rechner.
-
-  copypastepilot [--port 8766] [--no-open]
-  copypastepilot --check
-
-  --port N     Port des lokalen Servers (Standard 8766)
-  --no-open    Browser nicht automatisch öffnen
-  --check      Prüft, ob alles bereit ist (Node, agent-desktop, Freigaben), und startet nichts
-  --version    Version anzeigen
-
-Umgebung: COPYPASTEPILOT_HOME (Ordner für Konfigurationen), COPYPASTEPILOT_NO_UPDATE_CHECK=1`);
+  console.log(t('cli.help', { name: pkg.name, version: pkg.version }));
   process.exit(0);
 }
 if (args.includes('--version') || args.includes('-v')) {
@@ -39,20 +43,20 @@ if (args.includes('--version') || args.includes('-v')) {
 if (args.includes('--check')) {
   const { agentState: state, binaryPath: bin } = await import('../server/agent.js');
   const { homeDir: home } = await import('../server/configs.js');
+  const { INSTALL_SPEC: install } = await import('../server/update.js');
   const st = await state();
-  const hints = {
-    ok: 'bereit',
-    missing: 'agent-desktop wurde nicht gefunden. Bitte neu installieren: npm install -g copypastepilot@latest (oder npm install -g agent-desktop)',
-    no_screen_recording: 'Freigabe „Bildschirmaufnahme“ fehlt (nur damit Fenstertitel lesbar sind). Danach Terminal neu starten.',
-    no_permission: 'Freigabe „Bedienungshilfen“ fehlt. Danach Terminal neu starten.',
-  };
-  console.log(`CopyPastePilot ${pkg.version}
-Node.js:       ${process.versions.node} ${major >= 18 ? '(ok)' : '(zu alt, mindestens 18)'}
-System:        ${process.platform} ${process.arch}
-agent-desktop: ${bin()}
-Zustand:       ${hints[st] || st}
-Konfigurationen: ${home()}
-Hilfe/Kontakt: https://www.digitaldavid.de/copypastepilot  ·  Fehler melden: https://github.com/andreas-david/copypastepilot/issues`);
+  const row = (label, value) => `${t(`cli.label.${label}`)}:`.padEnd(18) + value;
+  console.log(
+    [
+      `CopyPastePilot ${pkg.version}`,
+      row('node', `${process.versions.node} ${major >= 18 ? t('cli.nodeOk') : t('cli.nodeOld')}`),
+      row('system', `${process.platform} ${process.arch}`),
+      row('agent', bin()),
+      row('state', t(`cli.state.${st}`, { install })),
+      row('configs', home()),
+      t('cli.contact', { site: SITE, issues: ISSUES }),
+    ].join('\n'),
+  );
   process.exit(st === 'ok' ? 0 : 2);
 }
 
@@ -65,7 +69,7 @@ const migrated = process.env.COPYPASTEPILOT_HOME ? null : migrateLegacyHome();
 const portArg = args.indexOf('--port');
 const wanted = portArg >= 0 ? Number(args[portArg + 1]) : Number(process.env.COPYPASTEPILOT_PORT || 8766);
 if (!Number.isInteger(wanted) || wanted < 1024 || wanted > 65535) {
-  console.error('Ungültiger Port (erlaubt: 1024–65535).');
+  console.error(t('cli.badPort'));
   process.exit(1);
 }
 
@@ -81,21 +85,17 @@ async function listen(port) {
     });
     if (ok) return { server, port: p };
   }
-  throw new Error(`Kein freier Port ab ${port} gefunden.`);
+  throw new Error(t('cli.noFreePort', { port }));
 }
 
 const { port } = await listen(wanted);
 const url = `http://127.0.0.1:${port}/?t=${token}`;
-if (migrated) console.log(`Konfigurationen aus ~/${migrated} wurden nach ~/.copypastepilot kopiert (der alte Ordner bleibt bestehen).\n`);
-console.log(`CopyPastePilot ${pkg.version} läuft.\n\n  ${url}\n\nKonfigurationen liegen in: ${homeDir()}\nBeenden mit Strg+C.\n\nHilfe und Kontakt: https://www.digitaldavid.de/copypastepilot\nFehler melden: https://github.com/andreas-david/copypastepilot/issues`);
+if (migrated) console.log(`${t('cli.migrated', { from: migrated })}\n`);
+console.log(t('cli.running', { name: 'CopyPastePilot', version: pkg.version, url, home: homeDir(), site: SITE, issues: ISSUES }));
 
 const state = await agentState();
-if (state === 'missing') {
-  console.warn(`\nHinweis: agent-desktop ließ sich nicht starten (${binaryPath()}). Bitte neu installieren: npm install -g ${INSTALL_SPEC}@latest`);
-} else if (state === 'no_screen_recording') {
-  console.warn(`\nHinweis: Es fehlt die Freigabe "Bildschirmaufnahme" (macOS: Systemeinstellungen → Datenschutz & Sicherheit).\nOhne sie sind Fenstertitel nicht lesbar, und Fenster lassen sich nicht erkennen. Es wird nichts aufgenommen.\nHilfe dabei: ${binaryPath()} permissions --guide\nDanach das Programm, aus dem du gestartet hast, neu starten.`);
-} else if (state === 'no_permission') {
-  console.warn(`\nHinweis: Es fehlt die Freigabe für die Bedienungshilfen (macOS: Systemeinstellungen → Datenschutz & Sicherheit).\nHilfe dabei: ${binaryPath()} permissions --guide`);
+if (['missing', 'no_screen_recording', 'no_permission'].includes(state)) {
+  console.warn(`\n${t(`cli.hint.${state}`, { path: binaryPath(), install: INSTALL_SPEC })}`);
 }
 
 updates.start();

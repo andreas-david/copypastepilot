@@ -1,112 +1,121 @@
 # CopyPastePilot
 
-Kopiert Felder von einem Programmfenster in ein anderes. Läuft nur auf deinem Rechner und liest Fenster über die
-Bedienungshilfen des Betriebssystems (mit [agent-desktop](https://www.npmjs.com/package/agent-desktop)).
+**English** · [Deutsch](README.de.md)
 
-## Installation für Einsteiger
+Copies fields from one program window into another. It runs only on your computer and reads windows through the
+operating system's accessibility features (using [agent-desktop](https://www.npmjs.com/package/agent-desktop)).
+No more retyping data from a mail into a form, from a spreadsheet into a customer program, or across several pages.
 
-Du brauchst nur **Node.js**. Alles andere holt CopyPastePilot selbst.
+## Quick start for beginners
 
-**1. Node.js installieren (einmalig).** Auf https://nodejs.org die Version „LTS“ laden und mit den Standardeinstellungen
-installieren. Danach das Terminal **neu öffnen**.
+All you need is **Node.js**. CopyPastePilot fetches everything else itself.
 
-**2. CopyPastePilot starten.** Öffne ein Terminal (Windows: Startmenü → „PowerShell“; macOS: Programme → Dienstprogramme →
-„Terminal“) und tippe:
+**1. Install Node.js (once).** Download the "LTS" version from https://nodejs.org and install it with the default
+settings. Then **reopen** your terminal.
+
+**2. Start CopyPastePilot.** Open a terminal (Windows: Start menu → "PowerShell"; macOS: Applications → Utilities →
+"Terminal") and type:
 
 ```bash
 npx copypastepilot
 ```
 
-Beim ersten Mal lädt das etwas, dann öffnet sich CopyPastePilot im Browser. Das Terminalfenster bleibt offen, solange du
-CopyPastePilot nutzt. Zum Beenden Strg+C oder das Fenster schließen. Öffne immer die Adresse aus dem Terminal; sie enthält ein
-Zugangs-Token.
+The first run downloads a few things, then CopyPastePilot opens in your browser. Keep the terminal window open while you
+use it. Press Ctrl+C or close the window to stop. Always open the address shown in the terminal; it contains an access
+token.
 
-**Noch einfacher, ohne Terminal:** Lade aus dem Ordner [`start`](start) die Datei `CopyPastePilot-starten.bat` (Windows) oder
-`CopyPastePilot-starten.command` (macOS) und starte sie per Doppelklick. Sie startet immer die neueste Version. Unter macOS
-beim ersten Mal Rechtsklick → „Öffnen“, weil die Datei nicht signiert ist.
+**Even easier, without a terminal:** download `CopyPastePilot-starten.bat` (Windows) or `CopyPastePilot-starten.command`
+(macOS) from the [`start`](start) folder and double-click it. It always starts the latest version. On macOS, right-click →
+"Open" the first time, because the file is not signed.
 
-**Etwas klappt nicht?** Im Terminal zeigt dieser Befehl, was fehlt (Node-Version, agent-desktop, Freigaben):
+**Something not working?** This command shows what is missing (Node version, agent-desktop, permissions):
 
 ```bash
 npx copypastepilot --check
 ```
 
-**Optional: dauerhaft installieren.** Dann genügt künftig der Befehl `copypastepilot`:
+**Optional: install permanently.** Then the command `copypastepilot` is enough from now on:
 
 ```bash
 npm install -g copypastepilot
 copypastepilot
 ```
 
-Aktualisieren: `npm install -g copypastepilot@latest`. Der Quelltext liegt auf
+To update: `npm install -g copypastepilot@latest`. The source code is on
 [GitHub](https://github.com/andreas-david/copypastepilot).
 
-### Freigaben unter macOS
+### Permissions on macOS
 
-Beim ersten Start werden zwei Freigaben gebraucht (Systemeinstellungen → Datenschutz & Sicherheit), jeweils für das
-Programm, aus dem du CopyPastePilot gestartet hast (meist das Terminal):
+On the first start, two permissions are needed (System Settings → Privacy & Security), each for the program you started
+CopyPastePilot from (usually the terminal):
 
-- **Bedienungshilfen:** zum Lesen und Ausfüllen der Felder.
-- **Bildschirm- & Systemaudioaufnahme:** nur damit macOS die Fenstertitel herausgibt. Ohne sie siehst du statt der Titel
-  nur den Programmnamen, und Fenster lassen sich nicht erkennen. Das Programm macht keine Bildschirmaufnahmen.
+- **Accessibility:** to read and fill the fields.
+- **Screen & System Audio Recording:** only so macOS hands out window titles. Without it you see the program name instead
+  of the title, and windows cannot be recognized. The program does not record the screen.
 
-Nach dem Erteilen das Terminal-Programm und CopyPastePilot neu starten. Hilfe: `npx agent-desktop permissions --guide`.
+After granting them, restart the terminal program and CopyPastePilot. Help: `npx agent-desktop permissions --guide`.
 
-### Hinweise für Windows
+### Notes for Windows
 
-- Wird agent-desktop nicht gefunden, hilft `npm install -g agent-desktop`. CopyPastePilot sucht es dann selbst im Suchpfad
-  (`PATH`). Mit der Umgebungsvariable `AGENT_DESKTOP` lässt sich auch direkt eine Datei angeben.
-- Ist der Ordner für globale npm-Programme nicht im `PATH`, funktioniert `npx` trotzdem. Das ist der sichere Weg.
+- If agent-desktop is not found, `npm install -g agent-desktop` helps. CopyPastePilot then finds it on the `PATH`
+  itself. You can also point to a file directly with the `AGENT_DESKTOP` environment variable.
+- If the folder for global npm programs is not on your `PATH`, `npx` still works. That is the safe way.
 
-## Mehrere Seiten (Schritte)
+## Several pages (steps)
 
-Eine Konfiguration kann aus mehreren Schritten bestehen, zum Beispiel bei einem Formular mit „Weiter“. Jeder Schritt hat
-sein eigenes Ziel und seine eigenen Feldpaare. Beim Ausführen läuft ein Schritt nach dem anderen: Du führst Schritt 1
-aus, siehst das ausgefüllte Formular, klickst dort auf „Weiter“ und startest erst dann Schritt 2 im Tool. Beim Einrichten
-wählst du links die Quelle und rechts das Ziel, klickst „Felder laden“ und ordnest zu. Schritt 2 legst du an, nachdem du im Ziel selbst auf „Weiter“ geklickt hast. Pro Schritt kannst du einen Hinweis
-hinterlegen, der nach dem Schritt angezeigt wird.
+A configuration can consist of several steps, for example for a form with a "Next" button. Each step has its own target
+and its own field pairs. When running, one step follows the other: you run step 1, look at the filled-in form, click
+"Next" there yourself, and only then start step 2 in the tool. When setting up, you choose the source on the left and the
+target on the right, click "Load fields" and map them. You create step 2 after clicking "Next" in the target yourself.
+For each step you can add a note that is shown after that step.
 
-## Darstellung
+## Appearance and language
 
-Oben rechts wählst du zwischen Automatisch (folgt dem System), Hell und Dunkel. Die Wahl bleibt im Browser gespeichert.
+At the top right you choose the language (German or English) and between Automatic (follows the system), Light and Dark.
+The choice is remembered in the browser. Without a choice, the interface uses the browser's language. The terminal follows
+the system language; change it with `--lang de` or `--lang en`, or with the environment variable `COPYPASTEPILOT_LANG`.
 
-## Fenster und Tabs
+## Windows and tabs
 
-Bei Browsern (getestet: Chrome) erscheint jeder Tab einzeln in der Liste. Nur der vordere Tab eines Fensters ist lesbar.
-Deshalb holt CopyPastePilot einen Hintergrund-Tab zum Lesen, Prüfen und Schreiben kurz nach vorn und stellt danach den
-vorherigen Tab wieder her. Liegen CopyPastePilot und Ziel im selben Browserfenster, springt die Ansicht dabei kurz um.
-Zusätze im Tab-Namen wie „– Arbeitsspeichernutzung – 12 MB“ werden entfernt. Das Wiederfinden läuft über „Titel enthält …“.
+In browsers (tested: Chrome, Safari, Firefox) every tab is listed separately. Only the front tab of a window is
+readable. That is why CopyPastePilot briefly brings a background tab to the front for reading, checking and writing, and
+then restores the previous tab. If CopyPastePilot and the target are in the same browser window, the view jumps briefly.
+Additions to the tab name such as "– Memory usage – 12 MB" are removed. Finding a window again works through
+"Title contains …".
 
-## Wo liegen die Konfigurationen?
+## Where are the configurations stored?
 
-Je Konfiguration eine JSON-Datei in `~/.copypastepilot/configs/`. Du kannst sie sichern oder weitergeben. Ein anderer
-Ordner lässt sich mit `COPYPASTEPILOT_HOME` einstellen.
+One JSON file per configuration in `~/.copypastepilot/configs/`. You can back them up or share them. A different folder
+can be set with `COPYPASTEPILOT_HOME`. Texts you write yourself (names, help, notes) are not translated.
 
-## Datenschutz
+## Privacy
 
-- Alles bleibt auf diesem Rechner. Feldinhalte werden nicht gespeichert und nicht gesendet.
-- Passwortfelder werden nie gelesen.
-- Der Server hört nur auf `127.0.0.1` und verlangt das Token.
-- Update-Hinweis: Das Programm fragt höchstens alle sechs Stunden bei der npm-Registry nach der neuesten Version
-  (ohne Nutzerdaten). Abschalten mit `COPYPASTEPILOT_NO_UPDATE_CHECK=1`.
+- Everything stays on this computer. Field contents are neither stored nor sent.
+- Password fields are never read.
+- The server listens only on `127.0.0.1` and requires the token.
+- Update notice: the program asks the npm registry for the latest version at most every six hours (no user data).
+  Turn it off with `COPYPASTEPILOT_NO_UPDATE_CHECK=1`.
 
-## Entwicklung
+## Development
 
-Die gebaute Oberfläche (`web-dist/`) liegt auch im Repository. `npm publish` baut sie vorher automatisch neu.
+The built interface (`web-dist/`) is also in the repository. `npm publish` rebuilds it automatically first.
+All texts live in `locales/de.js` and `locales/en.js`. A new language is one more file with the same keys (`npm test`
+checks that).
 
 ```bash
 npm install
-npm run build   # baut die Oberfläche nach web-dist/
+npm run build   # builds the interface into web-dist/
 npm test
 npm start
 ```
 
-## Hilfe und Kontakt
+## Help and contact
 
-Fragen oder Probleme? Schau auf [www.digitaldavid.de/copypastepilot](https://www.digitaldavid.de/copypastepilot) oder melde einen Fehler auf
-[GitHub](https://github.com/andreas-david/copypastepilot/issues). Bei Problemen mit dem Start hilft die Ausgabe von
-`npx copypastepilot --check`.
+Questions or problems? See [www.digitaldavid.de/copypastepilot](https://www.digitaldavid.de/copypastepilot) or report an
+issue on [GitHub](https://github.com/andreas-david/copypastepilot/issues). For startup problems, the output of
+`npx copypastepilot --check` helps.
 
-## Lizenz
+## License
 
-MIT, siehe [LICENSE](LICENSE). CopyPastePilot nutzt [agent-desktop](https://www.npmjs.com/package/agent-desktop) (Apache-2.0).
+MIT, see [LICENSE](LICENSE). CopyPastePilot uses [agent-desktop](https://www.npmjs.com/package/agent-desktop)
+(Apache-2.0).

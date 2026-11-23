@@ -3,6 +3,7 @@
   // Gelesen werden die Felder erst, wenn Quelle und Ziel gewählt sind (Knopf „Felder laden“ im Schritt).
   import { createEventDispatcher } from 'svelte';
   import { api } from './api.js';
+  import { t, lang } from './i18n.js';
 
   export let title = 'Quelle';
   export let side = 'source'; // nur für Beschriftungen
@@ -27,7 +28,7 @@
   }
 
   const loadApps = () =>
-    run('Lade Programme …', async () => {
+    run('ui.pick.loadingApps', async () => {
       apps = (await api('GET', '/api/apps')).apps;
       if (preset && !app && apps.includes(preset.app)) {
         app = preset.app;
@@ -52,7 +53,7 @@
   function chooseApp() {
     windows = []; entryKey = ''; contains = '';
     if (!app) return;
-    run('Lade Fenster …', () => loadWindows(false));
+    run('ui.pick.loadingWindows', () => loadWindows(false));
   }
 
   function chooseWindow() {
@@ -71,9 +72,9 @@
   let lastSig = null;
   $: if (sig !== lastSig) { lastSig = sig; dispatch('change', selection); }
 
-  $: hint = !app ? 'Programm wählen'
-    : !entryKey ? 'Fenster wählen'
-    : !containsOk ? 'Titel prüfen (er passt nicht zum gewählten Fenster)'
+  $: hint = !app ? $t('ui.pick.hintApp')
+    : !entryKey ? $t('ui.pick.hintWindow')
+    : !containsOk ? $t('ui.pick.hintTitle')
     : '';
   $: dispatch('hint', hint);
 </script>
@@ -81,41 +82,37 @@
 <section class="card">
   <h2>{title}</h2>
 
-  {#if !agentOk}<p class="bad">agent-desktop ist nicht bereit (siehe Hinweis oben).</p>{/if}
+  {#if !agentOk}<p class="bad">{$t('ui.pick.notReady')}</p>{/if}
 
   <label class="field">
-    Programm
+    {$t('ui.pick.program')}
     <select bind:value={app} on:change={chooseApp} disabled={!agentOk || !apps.length}>
-      <option value="">– wählen –</option>
+      <option value="">{$t('ui.pick.choose')}</option>
       {#each apps as a}<option value={a}>{a}</option>{/each}
     </select>
   </label>
 
   {#if app}
     <label class="field">
-      Fenster oder Tab
+      {$t('ui.pick.window')}
       <select bind:value={entryKey} on:change={chooseWindow} disabled={!windows.length}>
-        <option value="">– wählen –</option>
-        {#each windows as w}<option value={w.key}>{w.tab ? '▭ Tab: ' : ''}{w.title}{w.count > 1 ? ` (×${w.count})` : ''}</option>{/each}
+        <option value="">{$t('ui.pick.choose')}</option>
+        {#each windows as w}<option value={w.key}>{w.tab ? $t('ui.pick.tabPrefix') : ''}{w.title}{w.count > 1 ? ` (×${w.count})` : ''}</option>{/each}
       </select>
-      <span class="muted small hint">
-        Bei Browsern erscheint jeder Tab einzeln. Zum Lesen und Schreiben holt CopyPastePilot einen Hintergrund-Tab kurz nach vorn und stellt danach den vorherigen Tab wieder her.
-      </span>
+      <span class="muted small hint">{$t('ui.pick.windowHint')}</span>
     </label>
   {/if}
 
   {#if entryKey}
     <label class="field">
-      Titel enthält
+      {$t('ui.pick.contains')}
       <input bind:value={contains} />
-      <span class="muted small hint">
-        Damit wird {side === 'target' ? 'das Ziel' : 'die Quelle'} später wiedergefunden. Nimm nur den Teil, der immer gleich bleibt, zum Beispiel „Posteingang“ statt „Posteingang (3) – Name“.
-      </span>
+      <span class="muted small hint">{$t(side === 'target' ? 'ui.pick.containsHintTarget' : 'ui.pick.containsHintSource')}</span>
     </label>
-    {#if !containsOk}<p class="bad small">Der Text passt nicht zum gewählten Titel „{chosen?.title}“.</p>{/if}
+    {#if !containsOk}<p class="bad small">{$t('ui.pick.mismatch', { title: chosen?.title })}</p>{/if}
   {/if}
 
-  {#if busy}<p class="muted small" role="status">{busy}</p>{/if}
+  {#if busy}<p class="muted small" role="status">{$t(busy)}</p>{/if}
   {#if error}<p class="bad" role="alert">{error}</p>{/if}
 </section>
 
